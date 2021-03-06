@@ -1,0 +1,79 @@
+{
+  "ip=": [
+    "ip=",
+    "ip:",
+    "ip:",
+    "ip:",
+    "ip:"
+  ],
+  "port=": [
+    "port=",
+    "port:",
+    "port:",
+    "port:",
+    "port:"
+  ],
+  "ips=": [
+    "ip=",
+    "cidr:",
+    "ip:",
+    "net:",
+    "ip:"
+  ],
+  "hostname=": [
+    "host=",
+    "hostname:",
+    "hostname:",
+    "hostname:",
+    ""
+  ],
+  "domain=": [
+    "domain=",
+    "site:",
+    "domain:",
+    "hostname:",
+    "domain:"
+  ],
+  "title=": [
+    "title=",
+    "title:",
+    "title:",
+    "title:",
+    ""
+  ],
+  "header=": [
+    "header=",
+    "",
+    "headers:",
+    "data:",
+    ""
+  ],
+  "body=": [
+    "body=",
+    "",
+    "body:",
+    "body:",
+    ""
+  ],
+  "status_code=": [
+    "status_code=",
+    "",
+    "status_code:",
+    "data:",
+    ""
+  ],
+  "cert=": [
+    "cert=",
+    "ssl:",
+    "cert:",
+    "ssl:",
+    ""
+  ],
+  "protocol=": [
+    "protocol=",
+    "service:",
+    "service:",
+    "",
+    ""
+  ]
+}
