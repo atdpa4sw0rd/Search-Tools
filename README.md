@@ -1,2 +1,27 @@
 # Search-Tools
 聚合空间测绘搜索（Fofa,Zoomeye,Quake,Shodan,Censys,BinaryEdge）
+ICO搜索目前只有Fofa,Shodan,Quake支持
+代理设置本想是防止在API请求过于频繁，或者在实战中，好多红队打开某一个搜索引擎，导致出口IP被封禁
+代理自动采集，或者从搜索引擎搜索相关的代理池，日志保存一天，黑名单保存2天
+从搜索引擎调取过来的数据保存5天，第一是节省积分，第二可以观察拉取的数据结构
+支持聚合语法:
+1.IP
+ip=10.20.30.1
+2.Cidr
+ips=10.20.30.1/24
+3.Port
+port=443
+4.domain
+domain=XXX.com
+5.title
+title=xxxx
+6.header
+header=200
+7.body
+body=xxx
+8.status_code
+status_code=200
+9.cert
+cert=huawei
+10.protocol
+protocol=https
