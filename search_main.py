@@ -1352,55 +1352,73 @@ class binaryedge_search_qthread(QThread):
             select_list = []
             t0 = time.time()
             histtory_search = info[self.basic_qstr]
-            for i in histtory_search['events']:
-                target = i['results'][0]['target']['ip']
-                target_port = i['results'][0]['target']['port']
-                hostinfo = str(target) + ":" + str(target_port)
-                for j in i['results']:
-                    if 'service' in j['result']['data'].keys():
-                        protocol_ip = j['result']['data']['service']['name']
-                        break
-
-                select_list.append(hostinfo)
-                if protocol_ip == 'http' or protocol_ip == 'ssl/http':
-                    for t in i['results']:
-                        if 'response' in t['result']['data'].keys():
-                            # title_ip = str(BeautifulSoup(t['result']['data']['response']['body']['content'],'html.parser').title.string)
-                            if t['result']['data']['response']['title'] == None:
-                                title_ip = 'None'
-                            else:
-                                title_ip = t['result']['data']['response']['title']
-                            break
-                        elif 'service' in t['result']['data'].keys():
-                            # title_ip = str(BeautifulSoup(t['result']['data']['service']['banner'],'html.parser').title.string)
-                            if BeautifulSoup(t['result']['data']['service']['banner'],'html.parser').title == None:
-                                title_ip = 'None'   
-                            else:                                    
-                                title_ip = str(BeautifulSoup(t['result']['data']['service']['banner'],'html.parser').title.string)
+            if 'ip=' in self.basic_qstr:
+                for i in histtory_search['events']:
+                    target = i['results'][0]['target']['ip']
+                    target_port = i['results'][0]['target']['port']
+                    hostinfo = str(target) + ":" + str(target_port)
+                    for j in i['results']:
+                        if 'service' in j['result']['data'].keys():
+                            protocol_ip = j['result']['data']['service']['name']
                             break
 
+                    select_list.append(hostinfo)
+                    if protocol_ip == 'http' or protocol_ip == 'ssl/http':
+                        for t in i['results']:
+                            if 'response' in t['result']['data'].keys():
+                                # title_ip = str(BeautifulSoup(t['result']['data']['response']['body']['content'],'html.parser').title.string)
+                                if t['result']['data']['response']['title'] == None:
+                                    title_ip = 'None'
+                                else:
+                                    title_ip = t['result']['data']['response']['title']
+                                break
+                            elif 'service' in t['result']['data'].keys():
+                                # title_ip = str(BeautifulSoup(t['result']['data']['service']['banner'],'html.parser').title.string)
+                                if BeautifulSoup(t['result']['data']['service']['banner'],'html.parser').title == None:
+                                    title_ip = 'None'   
+                                else:                                    
+                                    title_ip = str(BeautifulSoup(t['result']['data']['service']['banner'],'html.parser').title.string)
+                                break
 
-                    
 
-                    httpurl = '<a href=\"'+ protocol_ip +'://' + str(target) + ":" + str(target_port) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(target) + ":" + str(target_port)  + '</span></a>'
-                    self.text_print.emit("<font color='#55ff00'>" + "Host: " + httpurl + "<font>")
-                    self.text_print.emit("<font color='#55ff00'>" + "Title: " + title_ip + "<font>")
-                    self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(protocol_ip) + "<font>")
+                        
+
+                        httpurl = '<a href=\"'+ protocol_ip +'://' + str(target) + ":" + str(target_port) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(target) + ":" + str(target_port)  + '</span></a>'
+                        self.text_print.emit("<font color='#55ff00'>" + "Host: " + httpurl + "<font>")
+                        self.text_print.emit("<font color='#55ff00'>" + "Title: " + title_ip + "<font>")
+                        self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(protocol_ip) + "<font>")
+                        self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                        self.res_print.emit("<font color='#55ff00'>" + '[+]'+httpurl+','+str(protocol_ip)+','+title_ip + "<font>")
+                    else:
+                        self.text_print.emit("<font color='#55ff00'>" + "Host: " + str(hostinfo ) + "<font>")
+                        self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(protocol_ip) + "<font>")
+                        self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                        self.res_print.emit("<font color='#55ff00'>" + '[+]' + str(hostinfo )+','+  str(protocol_ip)+ "<font>")
+
+                self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge历史查询完成" + "<font>")
+                self.count_print.emit("<font color='#55ff00'>" + "==================" + "<font>")
+                self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge当前资产:" + str(len(histtory_search['events'])) + "<font>")
+                self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge重复资产:" + str(len(select_list)-len(list(set(select_list)))) + "<font>")
+                self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge总计资产:" + str(histtory_search['total']) +  "<font>")
+                self.count_print.emit("<font color='#55ff00'>" + ">耗时:" + str(round(time.time() - t0,4)) + "秒"  + "<font>")
+                self.text_print.emit('开始整理数据')
+            elif 'domain=' in self.basic_qstr:
+                for i in histtory_search['events']:
+                    httpurl = '<a href=\"https://' + str(i) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(i) + '</span></a>'
+                    self.text_print.emit("<font color='#55ff00'>" + "Host: " + str(i) + "<font>")
+                    self.text_print.emit("<font color='#55ff00'>" + "Protocol: domain"  + "<font>")
+                    # self.text_print.emit("<font color='#55ff00'>" + "Title: None" + "<font>")
                     self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
-                    self.res_print.emit("<font color='#55ff00'>" + '[+]'+httpurl+','+str(protocol_ip)+','+title_ip + "<font>")
-                else:
-                    self.text_print.emit("<font color='#55ff00'>" + "Host: " + str(hostinfo ) + "<font>")
-                    self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(protocol_ip) + "<font>")
-                    self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
-                    self.res_print.emit("<font color='#55ff00'>" + '[+]' + str(hostinfo )+','+  str(protocol_ip)+ "<font>")
+                    select_list.append(i)
+                    self.res_print.emit("<font color='#55ff00'>" + '[+]' + httpurl +','+  "https"+ ','+"None"+"<font>")
+                self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge历史查询完成" + "<font>")
+                self.count_print.emit("<font color='#55ff00'>" + "==================" + "<font>")
+                self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge当前资产:" + str(len(histtory_search['events'])) + "<font>")
+                self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge重复资产:" + str(len(select_list)-len(list(set(select_list)))) + "<font>")
+                self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge总计资产:" + str(histtory_search['total']) +  "<font>")
+                self.count_print.emit("<font color='#55ff00'>" + ">耗时:" + str(round(time.time() - t0,4)) + "秒"  + "<font>")
+                self.text_print.emit('开始整理数据')
 
-            self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge查询完成" + "<font>")
-            self.count_print.emit("<font color='#55ff00'>" + "==================" + "<font>")
-            self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge当前资产:" + str(len(histtory_search['events'])) + "<font>")
-            self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge重复资产:" + str(len(select_list)-len(list(set(select_list)))) + "<font>")
-            self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge总计资产:" + str(histtory_search['total']) +  "<font>")
-            self.count_print.emit("<font color='#55ff00'>" + ">耗时:" + str(round(time.time() - t0,4)) + "秒"  + "<font>")
-            self.text_print.emit('开始整理数据')
             
         else:
             select_list = []
@@ -1409,7 +1427,7 @@ class binaryedge_search_qthread(QThread):
                 self.text_print.emit("<font color='#ff0000'>" + ">Binaryedge暂不支持多语法搜索"  + "<font>")
                 self.text_print.emit('开始整理数据')
             else:
-                if 'ip' in self.basic_qstr:
+                if 'ip=' in self.basic_qstr:
                     qstrb = self.basic_qstr.split('=')[-1]
                     # qstrb = re.findall('\d*\.\d*\.\d*\.\d*',self.basic_qstr)[0]
                     try:
@@ -1425,7 +1443,7 @@ class binaryedge_search_qthread(QThread):
                             self.text_print.emit("<font color='#ff0000'>" + ">Binaryedge 账号套餐不支持" + "<font>")
                             self.text_print.emit('开始整理数据')
                         else:
-                            self.text_print.emit("<font color='#ff0000'>" + binaryedge_res.json() + "<font>")
+                            self.text_print.emit("<font color='#ff0000'>" + ">Binaryedge 语法错误" + "<font>")
                             self.text_print.emit('开始整理数据')
                         
                     else:
@@ -1497,7 +1515,7 @@ class binaryedge_search_qthread(QThread):
                                 self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge日志存储完成" + "<font>")
                             except Exception:
                                 self.notice_print.emit("<font color='#ff0000'>" + ">Binaryedge日志文件不存在" + "<font>")
-                elif 'domain' in self.basic_qstr:
+                elif 'domain=' in self.basic_qstr:
                     qstrb = self.basic_qstr.split('=')[-1]
                     try:
                         binaryedge_res = requests.get(self.api_domain + qstrb,headers=self.header)
@@ -1519,35 +1537,37 @@ class binaryedge_search_qthread(QThread):
                             self.text_print.emit('开始整理数据')
                     else:
                         for i in binaryedge_res.json()['events']:                            
-                            self.text_print.emit("<font color='#55ff00'>" + "Domains: " + str(binaryedge_res.json()['events']) + "<font>")
+                            self.text_print.emit("<font color='#55ff00'>" + "Host: " + str(i) + "<font>")
+                            self.text_print.emit("<font color='#55ff00'>" + "Protocol: domain" + "<font>")
+                            self.text_print.emit("<font color='#55ff00'>" + "Title: None" + "<font>")
                             self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
-                            self.res_print.emit("<font color='#55ff00'>" + '[+]'+str(binaryedge_res.json()['events']) + "<font>")
+                            self.res_print.emit("<font color='#55ff00'>" + '[+]'+str(i)+ ',' +'https' +','+ 'None' + "<font>")
                             select_list.append(i)
 
-                    self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge查询完成" + "<font>")
-                    self.count_print.emit("<font color='#55ff00'>" + "==================" + "<font>")
-                    self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge当前资产:" + str(len(binaryedge.json()['events'])) + "<font>")
-                    self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge重复资产:" + str(len(select_list)-len(list(set(select_list)))) + "<font>")
-                    self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge总计资产:" + str(binaryedge.json()['total']) +  "<font>")
-                    self.count_print.emit("<font color='#55ff00'>" + ">耗时:" + str(round(time.time() - t0,4)) + "秒"  + "<font>")
-                    self.text_print.emit('开始整理数据')
-                    if self.log_time > 5:
-                        try:
-                            os.remove('./temp/binaryedge_search.log')
-                            with open('./temp/binaryedge_search.log','w+',encoding='utf8') as binaryedge_log_write:
-                                binaryedge_log_write.write(binaryedge_res_log_new)
-                            self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge日志清理完成" + "<font>")
-                        except Exception:
-                            self.notice_print.emit("<font color='#ff0000'>" + ">Binaryedge日志文件不存在" + "<font>")
-                    else:
-                        try:
-                            with open('./temp/binaryedge_search.log','w',encoding='utf8') as binaryedge_log_write:
-                                info[self.basic_qstr] = binaryedge_res.json()
-                                binaryedge_res_log = json.dumps(info,indent=3) 
-                                binaryedge_log_write.write(binaryedge_res_log)
-                            self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge日志存储完成" + "<font>")
-                        except Exception:
-                            self.notice_print.emit("<font color='#ff0000'>" + ">Binaryedge日志文件不存在" + "<font>")
+                        self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge查询完成" + "<font>")
+                        self.count_print.emit("<font color='#55ff00'>" + "==================" + "<font>")
+                        self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge当前资产:" + str(len(binaryedge_res.json()['events'])) + "<font>")
+                        self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge重复资产:" + str(len(select_list)-len(list(set(select_list)))) + "<font>")
+                        self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge总计资产:" + str(binaryedge_res.json()['total']) +  "<font>")
+                        self.count_print.emit("<font color='#55ff00'>" + ">耗时:" + str(round(time.time() - t0,4)) + "秒"  + "<font>")
+                        self.text_print.emit('开始整理数据')
+                        if self.log_time > 5:
+                            try:
+                                os.remove('./temp/binaryedge_search.log')
+                                with open('./temp/binaryedge_search.log','w+',encoding='utf8') as binaryedge_log_write:
+                                    binaryedge_log_write.write(binaryedge_res_log_new)
+                                self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge日志清理完成" + "<font>")
+                            except Exception:
+                                self.notice_print.emit("<font color='#ff0000'>" + ">Binaryedge日志文件不存在" + "<font>")
+                        else:
+                            try:
+                                with open('./temp/binaryedge_search.log','w',encoding='utf8') as binaryedge_log_write:
+                                    info[self.basic_qstr] = binaryedge_res.json()
+                                    binaryedge_res_log = json.dumps(info,indent=3) 
+                                    binaryedge_log_write.write(binaryedge_res_log)
+                                self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge日志存储完成" + "<font>")
+                            except Exception:
+                                self.notice_print.emit("<font color='#ff0000'>" + ">Binaryedge日志文件不存在" + "<font>")
 
 
 
