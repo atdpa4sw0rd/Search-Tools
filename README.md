@@ -4,9 +4,19 @@
 #Search-Tools [![License](https://img.shields.io/aur/license/yaourt.svg)](https://github.com/atdpa4sw0rd/Search-Tools/blob/main/LICENSE)
 ----------
 
-**Search-Tools**集合比较常见的网络空间探测引擎
+**Search-Tools**
+**集合比较常见的网络空间探测引擎**
 
 **Fofa,Zoomeye,Quake,Shodan,Censys,BinaryEdge**
+
+## 1.5.2更新说明
+```
+1.增加自定义app规则(Fofa,Zoomeye,Quake支持app)
+2.修复整合数据问题
+3.增加Rapiddns域名反查、IP反查询
+4.增加自定义输入框提示
+
+```
 
 
 ## 简单说明
@@ -23,28 +33,79 @@
 - **censys,binaryedge都可以免费注册，但每个月只能查询250次**
 - **大佬勿喷**
 
+## 自定义APP规则说明
+```
+1.首先在apprule.json文件里添加三个引擎的app规则
+  注意格式和标点符号(否则会报错)
+  可以是三个搜索引擎官方带的app规则名(例如:app=泛微协同办公OA)
+  可以是三个搜索引擎原始字符串搜索(例如:app=锐捷EG易网关)
+  app=(名字任意)
+{
+    "app=泛微协同办公OA": {
+        "fofa": "app=\"泛微-协同办公OA\"",
+        "zoomeye": "app:\"泛微 协同办公OA\"",
+        "quake": "app:\"泛微协同办公OA\""
+    },
+    "app=泛微云桥": {
+        "fofa": "app=\"泛微-云桥e-Bridge\"",
+        "zoomeye": "app:\"泛微云桥\"",
+        "quake": "app:\"泛微-云桥e-Bridge\""
+    },
+	"app=锐捷EG易网关": {
+        "fofa": "body=\"锐捷在线客服\"",
+        "zoomeye": "锐捷在线客服",
+        "quake": "app:\"锐捷-EG易网关\""
+    }
+}
+2.在./temp/items文件中填入输入框联想词汇,这样在输入框填写APP等规则会有联想
+
+ip=
+ips=
+port=
+domain=
+hostname=
+title=
+header=
+body=
+cert=
+protocol=
+status_code=
+app=泛微协同办公OA
+app=泛微云桥
+app=锐捷EG易网关
+
+```
+
 ## 使用指南
 
 [![Python 3.9](https://img.shields.io/badge/python-3.9-yellow.svg)](https://www.python.org/) 
 ```
+配置KEY
+1.在config.ini里填写已有的api KEY
 
-1.IP ip=10.20.30.1 
-2.Cidr ips=10.20.30.1/24 
-3.Port port=443 
-4.domain domain=XXX.com 
-5.title title=xxxx 
-6.header header=200 
-7.body body=xxx
-8.status_code status_code=200 
-9.cert cert=huawei
-10.protocol protocol=https
+单语法搜索
+1.IP: ip=10.20.30.1 
+2.Cidr: ips=10.20.30.1/24 
+3.Port: port=443 
+4.domain: domain=XXX.com 
+5.title: title=xxxx 
+6.header: header=200 
+7.body: body=xxx
+8.status_code: status_code=200 
+9.cert: cert=huawei
+10.protocol: protocol=https
+
+多语法搜索
+and: ++
+or: --
+not: ^^
+ips=10.20.30.1/24++protocol=https
+ips=10.20.30.1/24--protocol=https
+ips=10.20.30.1/24^^protocol=https
 
 ```
 
-![img](https://github.com/atdpa4sw0rd/Search-Tools/blob/main/search_tools.jpg)
-
-
-![img](https://github.com/atdpa4sw0rd/Search-Tools/blob/main/15a65458-5a94-4302-8bc6-66a82310e9f7.gif)
+![image](https://gitee.com/atdpa4sw0rd/Search-Tools/blob/main/search_tools.jpg)
 
 
 
@@ -56,7 +117,10 @@
 
     │  README.md  # 说明文档
     │  config.ini  # 配置文件
-    │  rule.json  # 集合搜索语句
+    │  items.py  # 调用提示符
+    │  favicon.py  # 图标
+    │  apprule.json  # app规则库
+    │  rules.json  # 语法规则库
     │
     ├─temp
     │  ├─binaryedge_search.log #存储binaryedge日志
@@ -65,6 +129,8 @@
     │  ├─quake_search.log #存储quake日志
     │  ├─shodan_search.log #存储shodan储日志
     │  ├─zoomeye_search.log #存储zoomeye日志
+    │  ├─rapiddns_search.log #存储shodan储日志
+    │  ├─items #存储输入框提示符
     │  ├─proxylist #存储存活代理IP
     │  └─proxylist_unalive #存储非存活代理IP
     │

@@ -2,8 +2,8 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMessageBox,QTableWidget,QTableWidgetItem,QCompleter
 from PyQt5.QtCore import pyqtSignal, QObject, QThread,QFileInfo,QRegExp,QUrl,Qt
 from Ui_search import Ui_allsearch
-#from Ui_proxy_spider import Ui_proxy_spider
 from bs4 import BeautifulSoup
+import items
 import favicon
 from PyQt5.QtGui import QIcon,QRegExpValidator,QIntValidator,QDesktopServices
 from threading import Thread
@@ -14,16 +14,14 @@ import re,sys,os,json,datetime,base64,requests,shodan,mmh3,random
 import subprocess
 import time
 
-items_list=["ip=","ips=","port=","domain=","hostname=","title=","header=","body=","cert=","protocol=","status_code="]
+items_list=items.items_all()
 
 class MyWindow(QtWidgets.QMainWindow, Ui_allsearch):
     def __init__(self):
         super(MyWindow, self).__init__()
         self.setupUi(self)
-        # self.menubar.triggered.connect(self.help_m)
 
         self.start_search_pushButton.clicked.connect(self.start_searching)
-        # self.proxy_start_pushButton.clicked.connect(self.start_get_proxy)
         self.proxy_test_pushButton.clicked.connect(self.start_proxy)
         self.statusBar().showMessage('by: mojie')
         self.init_start_keywords_lineEdit()
@@ -242,7 +240,10 @@ class MyWindow(QtWidgets.QMainWindow, Ui_allsearch):
         binaryedge_ctime = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(os.stat("./temp/binaryedge_search.log").st_ctime))
         binaryedge_ntime = datetime.datetime.now()
         binaryedge_file_creat_time = (parse(str(binaryedge_ntime)) - parse(binaryedge_ctime)).days
-        return [fofa_file_creat_time,zoomeye_file_creat_time,quake_file_creat_time,shodan_file_creat_time,censys_file_creat_time,binaryedge_file_creat_time]
+        rapiddns_ctime = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(os.stat("./temp/rapiddns_search.log").st_ctime))
+        rapiddns_ntime = datetime.datetime.now()
+        rapiddns_file_creat_time = (parse(str(rapiddns_ntime)) - parse(rapiddns_ctime)).days
+        return [fofa_file_creat_time,zoomeye_file_creat_time,quake_file_creat_time,shodan_file_creat_time,censys_file_creat_time,binaryedge_file_creat_time,rapiddns_file_creat_time]
     
     # def start_get_proxy(self):
     #     print(self.proxy_checkBox.isChecked())
@@ -340,6 +341,9 @@ class MyWindow(QtWidgets.QMainWindow, Ui_allsearch):
                 self.binaryedge_thread.count_print.connect(self.count_output)
                 self.binaryedge_thread.res_print.connect(self.all_output)
                 self.binaryedge_search_output_textBrowser.setText("<font color='#55ff00'>" + '==========================' + "<font>")
+                self.rapiddns_qthread = rapiddns_search_qthread(self.start_keywords_lineEdit.text(),log_time[6],proxy_flag)
+                self.rapiddns_qthread.text_print.connect(self.all_output)
+                self.rapiddns_qthread.notice_print.connect(self.notice_output)
                 
                 self.fofa_thread.start()
                 self.zoomeye_thread.start()
@@ -347,6 +351,7 @@ class MyWindow(QtWidgets.QMainWindow, Ui_allsearch):
                 self.shodan_thread.start()
                 self.censys_thread.start()
                 self.binaryedge_thread.start()
+                self.rapiddns_qthread.start()
                 self.final_result_search_output_textBrowser.setText('')
 
 
@@ -401,8 +406,9 @@ class MyWindow(QtWidgets.QMainWindow, Ui_allsearch):
         if '错误' in text:
             self.binaryedge_search_output_textBrowser.setText(str(text))
         elif '开始整理数据' in text:
-            self.start_res = result_clear(self.final_result_search_output_textBrowser.toPlainText())
-            self.start_res.text_print.connect(self.all_output)
+            # self.start_res = result_clear(self.final_result_search_output_textBrowser.toPlainText())
+            self.start_res = result_start()
+            self.start_res.text_print.connect(self.result_start_output)
             self.start_res.start()
 
         else:
@@ -418,6 +424,15 @@ class MyWindow(QtWidgets.QMainWindow, Ui_allsearch):
             self.proxy_output_textBrowser.setText(str(text))
         else:
             self.proxy_output_textBrowser.append(str(text))
+
+    def result_start_output(self,text):
+        if "start" in text:
+            self.start_res = result_clear(self.final_result_search_output_textBrowser.toPlainText())
+            self.start_res.text_print.connect(self.all_output)
+            self.start_res.start()
+        else:
+            pass
+
     
     
     def notice_output(self,text):
@@ -432,6 +447,21 @@ class MyWindow(QtWidgets.QMainWindow, Ui_allsearch):
         else:
             self.final_result_search_output_textBrowser.append(str(text))
 
+class result_start(QThread):
+    text_print = pyqtSignal(str)
+    notice_print = pyqtSignal(str)
+    count_print = pyqtSignal(str)
+    res_print = pyqtSignal(str)
+
+    def __init__(self):
+        super(result_start,self).__init__()
+
+    def run(self):
+        time.sleep(6)
+        self.text_print.emit("start")
+
+
+
 class result_clear(QThread):
     text_print = pyqtSignal(str)
     notice_print = pyqtSignal(str)
@@ -443,7 +473,7 @@ class result_clear(QThread):
         self.res = a
     
     def run(self):
-        time.sleep(6)
+        # time.sleep(6)
         test = self.res.strip().replace('[+]','').split('\n')
         webtarget = {}
         nowtarget = {}
@@ -552,10 +582,8 @@ class result_clear(QThread):
                 for f in services_host:
                     protocol = protocol + f +'|'
                 self.text_print.emit("<font color='#ffff00'>" + '资产: '+ inow +' 协议有变动: ' +protocol+ "<font>")
-                # print('资产{0}协议有变化:{1}'.format(inow,protocol)) 
             else:
                 self.text_print.emit("<font color='#55ff00'>" + '资产: '+ inow +' 协议无变动: ' +services_host[0]+ "<font>")
-                # print('资产{0}协议无变化:{1}'.format(inow,services_host[0])) 
 
 
 
@@ -614,6 +642,14 @@ class fofa_search_qthread(QThread):
                         self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + i[4] + "<font>")
                         self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
                         self.res_print.emit("<font color='#55ff00'>" +"[+]" + httpurl +","+ i[4] +","+i[3]+ "<font>") 
+                    elif 'app=' in self.basic_qstr:
+                        httpurl = '<a href=\"http://' + str(i[1]) + ":" + str(i[2]) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(i[1]) + ":" + str(i[2])  + '</span></a>'
+                        self.text_print.emit("<font color='#55ff00'>" + "Host: " + httpurl + "<font>")
+                        self.text_print.emit("<font color='#55ff00'>" + "Title: " + i[3] + "<font>")
+                        self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + i[4] + "<font>")
+                        self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                        self.res_print.emit("<font color='#55ff00'>" +"[+]" + httpurl +","+ "http" +","+i[3]+ "<font>") 
+
                     else:  
                         self.text_print.emit("<font color='#55ff00'>" + "Host: " + i[1] + ":" + i[2] + "<font>")                       
                         self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + i[4] + "<font>")
@@ -627,6 +663,105 @@ class fofa_search_qthread(QThread):
                 self.count_print.emit("<font color='#55ff00'>" +  ">Fofa总计资产:" + str(histtory_search['size'])  + "<font>")                     
                 self.count_print.emit("<font color='#55ff00'>" +  ">耗时:" + str(round(time.time() - t0,4)) + "秒" + "<font>")
                 # self.text_print.emit("<font color='#55ff00'>" + '搜索完成' + "<font>")
+            elif 'app=' in self.basic_qstr:
+                if '++' in self.basic_qstr or '--' in self.basic_qstr or '^^' in self.basic_qstr:
+                    self.text_print.emit("<font color='#ff0000'>" + ">APP搜索不支持多语法" + httpurl + "<font>")
+                else:
+                    with open("./apprule.json",'r',encoding='utf8') as f:
+                        info_str = json.load(f)   
+                    if self.basic_qstr not in info_str.keys():
+                        self.text_print.emit("<font color='#ff0000'>" + ">APP语法未定义" + "<font>")
+                    else:
+                        basic_qstr = info_str[self.basic_qstr]['fofa']
+                        base64_qstr = str(base64.b64encode(basic_qstr.encode("utf-8")),'utf-8')
+                        proxy_alive = {}
+                        t0 = time.time()
+                        select_list = []  
+                        api_url_http = 'http://fofa.so/api/v1/search/all?email=%s&key=%s&fields=host,ip,port,title,protocol,header,banner&size=100&page=1&qbase64=%s'%(self.email,self.key,base64_qstr)              
+                        api_url_https = 'https://fofa.so/api/v1/search/all?email=%s&key=%s&fields=host,ip,port,title,protocol,header,banner&size=100&page=1&qbase64=%s'%(self.email,self.key,base64_qstr)
+                        if self.proxy_flag == 'start':
+                            with open('./temp/proxylist','r',encoding='utf8') as pt:
+                                pr = pt.readlines()
+                            proxyinfo = random.choice(pr)
+                            types = proxyinfo.strip().split(',')[0]
+                            host = proxyinfo.strip().split(',')[1]
+                            port = proxyinfo.strip().split(',')[2]
+                            proxy_alive[types]=types + "://"+host+":"+port                                                          
+                        else:
+                            pass
+
+                        if len(proxy_alive.keys()) == 1:
+                            if list(proxy_alive.keys())[0] == 'http':
+                                res = requests.get(url=api_url_http,headers=self.headers,proxies={'http': "http://{0}:{1}".format(host,port)})
+                            else:
+                                res = requests.get(url=api_url_https,headers=self.headers,proxies={'https': "https://{0}:{1}".format(host,port)}) 
+                        else:
+                            res = requests.get(url=api_url_https,headers=self.headers)
+                        fofa_res = {}
+                        fofa_res[self.basic_qstr] = res.json()
+                        fofa_res_log_new = json.dumps(fofa_res,indent=3) 
+                        if res.json()['error'] is True:
+                            self.text_print.emit("<font color='#ff0000'>" + ">Fofa API错误" + "<font>")
+                        else:
+                            if len(res.json()['results']) == 0:
+                                self.text_print.emit("<font color='#ff0000'>" + ">Fofa没有相关资产" + "<font>")
+                            else:                                      
+                                for i in res.json()['results']:
+                                    hostinfo = str(i[1]) + ":" + str(i[2])
+                                    select_list.append(hostinfo)
+                                    if i[4] == 'http':
+                                        httpurl = '<a href=\"http://' + str(i[1]) + ":" + str(i[2]) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(i[1]) + ":" + str(i[2])  + '</span></a>'
+                                        self.text_print.emit("<font color='#55ff00'>" + "Host: " + httpurl + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + "Title: " + i[3] + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + i[4] + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                                        self.res_print.emit("<font color='#55ff00'>" +"[+]" + httpurl +","+ i[4] +","+i[3]+ "<font>")
+                                    elif i[4] == 'https': 
+                                        httpurl = '<a href=\"https://' + str(i[1]) + ":" + str(i[2]) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(i[1]) + ":" + str(i[2])  + '</span></a>'
+                                        self.text_print.emit("<font color='#55ff00'>" + "Host: " + httpurl + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + "Title: " + i[3] + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + i[4] + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                                        self.res_print.emit("<font color='#55ff00'>" +"[+]" + httpurl +","+ i[4] +","+i[3]+ "<font>")
+                                    elif "app=" in self.basic_qstr:
+                                        httpurl = '<a href=\"http://' + str(i[1]) + ":" + str(i[2]) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(i[1]) + ":" + str(i[2])  + '</span></a>'
+                                        self.text_print.emit("<font color='#55ff00'>" + "Host: " + httpurl + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + "Title: " + i[3] + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + "Protocol: http" + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                                        self.res_print.emit("<font color='#55ff00'>" +"[+]" + httpurl +","+ "http" +","+i[3]+ "<font>")
+
+                                    else:  
+                                        self.text_print.emit("<font color='#55ff00'>" + "Host: " + i[1] + ":" + i[2] + "<font>")                       
+                                        # self.text_print.emit("<font color='#55ff00'>" + "Title: " + i[3] + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + i[4] + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                                        self.res_print.emit("<font color='#55ff00'>" +"[+]" + i[1] + ":" + i[3] +","+ "http" + "<font>") 
+
+
+                                
+
+                        
+                    
+                            self.notice_print.emit("<font color='#55ff00'>" + ">Fofa搜索完成" + "<font>")  
+                            self.count_print.emit("<font color='#55ff00'>" + "==================" +  "<font>") 
+                            self.count_print.emit("<font color='#55ff00'>" + ">Fofa当前资产:" + str(len(res.json()['results'])) + "<font>") 
+                            self.count_print.emit("<font color='#55ff00'>" +  ">Fofa重复资产:" + str(len(select_list)-len(list(set(select_list))))  + "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" +  ">Fofa总计资产:" + str(res.json()['size'])  + "<font>")                     
+                            self.count_print.emit("<font color='#55ff00'>" +  ">耗时:" + str(round(time.time() - t0,4)) + "秒" + "<font>")
+                            if self.log_time > 5:
+                                os.remove("./temp/fofa_search.log")
+                                with open('./temp/fofa_search.log','w+',encoding='utf8') as fofa_log_write:
+                                    fofa_log_write.write(fofa_res_log_new)
+                                self.notice_print.emit("<font color='#55ff00'>" + ">Fofa日志清理完成" + "<font>")
+                            else:
+                                with open('./temp/fofa_search.log','w',encoding='utf8') as fofa_log_write:
+                                    info[self.basic_qstr] = res.json()
+                                    fofa_res_log = json.dumps(info,indent=3) 
+                                    fofa_log_write.write(fofa_res_log)
+                                self.notice_print.emit("<font color='#55ff00'>" + ">Fofa日志存储完成" + "<font>")
+
+
             else:
                 proxy_alive = {}
                 t0 = time.time()
@@ -682,7 +817,7 @@ class fofa_search_qthread(QThread):
                                 # self.text_print.emit("<font color='#55ff00'>" + "Title: " + i[3] + "<font>")
                                 self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + i[4] + "<font>")
                                 self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
-                                self.res_print.emit("<font color='#55ff00'>" +"[+]" + i[1] + ":" + i[2] +","+ i[4] + "<font>") 
+                                self.res_print.emit("<font color='#55ff00'>" +"[+]" + i[1] + ":" + i[3] +","+ "http" + "<font>") 
 
                         
 
@@ -783,6 +918,112 @@ class zoomeye_search_qthread(QThread):
                 self.count_print.emit("<font color='#55ff00'>" + ">Zoomeye重复资产:" + str(len(select_list)-len(list(set(select_list)))) + "<font>")
                 self.count_print.emit("<font color='#55ff00'>" + ">Zoomeye总计资产:" + str(histtory_search['total'])  + "<font>")
                 self.count_print.emit("<font color='#55ff00'>" + ">耗时:" + str(round(time.time() - t0,4)) + "秒" + "<font>")
+            elif "app=" in self.basic_qstr:
+                if '++' in self.basic_qstr or '--' in self.basic_qstr or '^^' in self.basic_qstr:
+                    self.text_print.emit("<font color='#ff0000'>" + '>APP暂不支持多语法' + "<font>")
+                else:
+                    proxy_alive = {}
+                    t0 = time.time()                
+                    select_list = []
+                    with open("./apprule.json",'r',encoding='utf8') as f:
+                        info_str = json.load(f)   
+                    if self.basic_qstr not in info_str.keys():
+                        self.text_print.emit("<font color='#ff0000'>" + '>APP语法未定义' + "<font>")
+                    else:
+                        basic_qstr = info_str[self.basic_qstr]['zoomeye']
+                        app_qstr = quote(basic_qstr,'utf-8')
+                        # response = requests.get(url="https://api.zoomeye.org/host/search?query="+self.qstr, headers=self.headers)
+                        api_url_http = 'http://api.zoomeye.org/host/search?query='
+                        api_url_https = 'https://api.zoomeye.org/host/search?query='
+                        if self.proxy_flag == 'start':
+                            with open('./temp/proxylist','r',encoding='utf8') as pt:
+                                pr = pt.readlines()
+                            proxyinfo = random.choice(pr)
+                            types = proxyinfo.strip().split(',')[0]
+                            host = proxyinfo.strip().split(',')[1]
+                            port = proxyinfo.strip().split(',')[2]
+                            if port == '80' or port == '443':
+                                proxy_alive[types]=types + "://"+host 
+                                host_infop =  proxyinfo.strip().split(',')[1]
+                            else:
+                                proxy_alive[types]=types + "://"+host+":"+port  
+                                host_infop =  proxyinfo.strip().split(',')[1]+":"+proxyinfo.strip().split(',')[2]                                                        
+                        else:
+                            pass
+                        
+                        # if len(proxy_alive.keys()) == 1:
+                        #     if list(proxy_alive.keys())[0] == 'http':
+                        #         response = requests.get(url=api_url_http,headers=self.headers,proxies={'http': 'http://{0}'.format(host_infop)})
+                        #     else:
+                        #         response = requests.get(url=api_url_https,headers=self.headers,proxies={'https': 'https://{0}'.format(host_infop)}) 
+                        # else:
+                        #     response = requests.get(url=api_url_https,headers=self.headers)
+                        response = requests.get(url=api_url_https+app_qstr,headers=self.headers)
+                        zoomeye_res = {}
+                        zoomeye_res[self.basic_qstr] = response.json()
+                        zoomeye_res_log_new = json.dumps(zoomeye_res,indent=3) 
+                        if 'total' not in response.json().keys():
+                            if 'error' in response.json().keys():
+                                self.text_print.emit("<font color='#ff0000'>" + '>Zoomeye API错误' + "<font>")
+                            else:
+                                self.text_print.emit("<font color='#ff0000'>" + '>Zoomeye 未知错误' + "<font>")
+                        else:
+                            if response.json()['total'] == 0:
+                                self.text_print.emit("<font color='#ff0000'>" + '>Zoomeye没有相关资产' + "<font>")
+                            else:                    
+                                for i in response.json()['matches']:
+                                    hostinfo = str(i['ip']) + ":" + str(i['portinfo']['port'])
+                                    select_list.append(hostinfo)
+                                    if i['portinfo']['service'] == 'http':
+                                        httpurl = '<a href=\"http://' + str(i['ip']) + ":" + str(i['portinfo']['port']) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(i['ip']) + ":" + str(i['portinfo']['port'])  + '</span></a>'
+                                        self.text_print.emit("<font color='#55ff00'>" + "Host: " +  httpurl + "<font>")                    
+                                        if i['portinfo']['title'] == None:
+                                            title = 'Title: None'
+                                            self.text_print.emit("<font color='#55ff00'>" + "Title: None" + "<font>")
+                                        else:
+                                            title = str(i['portinfo']['title'][0])                    
+                                            self.text_print.emit("<font color='#55ff00'>" + "Title: " + str(i['portinfo']['title'][0]) + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(i['portinfo']['service']) + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                                        self.res_print.emit("<font color='#55ff00'>" + '[+]' + httpurl+','+str(i['portinfo']['service'])+','+title + "<font>")
+                                    elif i['portinfo']['service'] == 'https':
+                                        httpurl = '<a href=\"https://' + str(i['ip']) + ":" + str(i['portinfo']['port']) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(i['ip']) + ":" + str(i['portinfo']['port'])  + '</span></a>'
+                                        self.text_print.emit("<font color='#55ff00'>" + "Host: " +  httpurl + "<font>")                    
+                                        if i['portinfo']['title'] == None:
+                                            title = 'Title: None'
+                                            self.text_print.emit("<font color='#55ff00'>" + "Title: None" + "<font>")
+                                        else:
+                                            title = str(i['portinfo']['title'][0])                        
+                                            self.text_print.emit("<font color='#55ff00'>" + "Title: " + str(i['portinfo']['title'][0]) + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(i['portinfo']['service']) + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                                        self.res_print.emit("<font color='#55ff00'>" + '[+]' + httpurl+','+str(i['portinfo']['service'])+','+title + "<font>")
+
+                                    else:
+                                        self.text_print.emit("<font color='#55ff00'>" + "Host: " + str(i['ip']) + ":" + str(i['portinfo']['port']) + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(i['portinfo']['service']) + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                                        self.res_print.emit("<font color='#55ff00'>" + '[+]' + str(i['ip']) + ":" + str(i['portinfo']['port'])+','+str(i['portinfo']['service']) + "<font>")
+                        
+                            self.notice_print.emit("<font color='#55ff00'>" + ">Zoomeye搜索完成" + "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" + "==================" + "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" + ">Zoomeye当前资产:" + str(len(response.json()['matches'])) + "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" + ">Zoomeye重复资产:" + str(len(select_list)-len(list(set(select_list)))) + "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" + ">Zoomeye总计资产:" + str(response.json()['total'])  + "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" + ">耗时:" + str(round(time.time() - t0,4)) + "秒" + "<font>")
+                            if self.log_time > 5:
+                                os.remove("./temp/zoomeye_search.log")
+                                with open('./temp/zoomeye_search.log','w+',encoding='utf8') as zoomeye_log_write:
+                                    zoomeye_log_write.write(zoomeye_res_log_new)
+                                self.notice_print.emit("<font color='#55ff00'>" + ">Zoomeye日志清理完成" + "<font>")
+                            else:
+                                with open('./temp/zoomeye_search.log','w',encoding='utf8') as zoomeye_log_write:
+                                    info[self.basic_qstr] = response.json()
+                                    zoomeye_res_log = json.dumps(info,indent=3) 
+                                    zoomeye_log_write.write(zoomeye_res_log)
+
+                                self.notice_print.emit("<font color='#55ff00'>" + ">Zoomeye日志存储完成" + "<font>")
+
             else:
                 proxy_alive = {}
                 t0 = time.time()                
@@ -966,6 +1207,121 @@ class quake_search_qthread(QThread):
                 self.count_print.emit("<font color='#55ff00'>" + ">Quake重复资产:" + str(len(select_list)-len(list(set(select_list)))) + "<font>")
                 self.count_print.emit("<font color='#55ff00'>" + ">Quake总计资产:" + str(histtory_search['meta']['pagination']['total']) + "<font>")
                 self.count_print.emit("<font color='#55ff00'>" + ">耗时:" + str(round(time.time() - t0,4)) + "秒" + "<font>")
+            elif "app=" in self.basic_qstr:
+                if '++' in self.basic_qstr or '--' in self.basic_qstr or '^^' in self.basic_qstr:
+                    self.text_print.emit("<font color='#ff0000'>" + '>APP暂不支持多语法' + "<font>")
+                else:
+                    with open("./apprule.json",'r',encoding='utf8') as f:
+                        info_str = json.load(f) 
+                    if self.basic_qstr not in info_str.keys():
+                        self.text_print.emit("<font color='#ff0000'>" + '>APP语法未定义' + "<font>")
+                    else:
+                        basic_qstr = info_str[self.basic_qstr]['quake']
+                        datastr = {
+                                    "query": basic_qstr,
+                                    "start": 0,
+                                    "size": 10
+                                }
+                        basic_qstr = info_str[self.basic_qstr]['zoomeye']
+                        proxy_alive = {}
+                        t0 = time.time()
+                        select_list = []
+                        response_quake = requests.post(url="https://quake.360.cn/api/v3/search/quake_service", headers=self.headers, json=datastr)
+                        # if self.proxy_flag == 'start':
+                        #     with open('./temp/proxylist','r',encoding='utf8') as pt:
+                        #         pr = pt.readlines()
+                        #     proxyinfo = random.choice(pr)
+                        #     types = proxyinfo.strip().split(',')[0]
+                        #     host = proxyinfo.strip().split(',')[1]
+                        #     port = proxyinfo.strip().split(',')[2]
+                        #     if port == '80' or port == '443':
+                        #         proxy_alive[types]=types + "://"+host 
+                        #         host_infop =  proxyinfo.strip().split(',')[1]
+                        #     else:
+                        #         proxy_alive[types]=types + "://"+host+":"+port  
+                        #         host_infop =  proxyinfo.strip().split(',')[1]+":"+proxyinfo.strip().split(',')[2]                                                        
+                        # else:
+                        #     pass
+                    
+                        # if len(proxy_alive.keys()) == 1:
+                        #     if list(proxy_alive.keys())[0] == 'http':
+                        #         response_quake = requests.post(url="http://quake.360.cn/api/v3/search/quake_service",headers=self.headers,json=self.data,proxies={'http': 'http://{0}'.format(host_infop)})
+                        #     else:
+                        #         response_quake = requests.post(url="https://quake.360.cn/api/v3/search/quake_service",headers=self.headers,json=self.data,proxies={'https': 'https://{0}'.format(host_infop)}) 
+                        # else:
+                        #     response_quake = requests.post(url="https://quake.360.cn/api/v3/search/quake_service",headers=self.headers,json=self.data)
+
+                        quake_res = {}
+                        quake_res[self.basic_qstr] = response_quake.json()
+                        quake_res_log_new = json.dumps(quake_res,indent=3) 
+                        if response_quake.status_code == 401:
+                            self.text_print.emit("<font color='#ff0000'>" + ">Quake账号密码错误" + "<font>")
+                        else:
+                            if len(response_quake.json()['data']) <= 0:
+                                self.text_print.emit("<font color='#ff0000'>" + ">Quake没有相关资产" + "<font>")
+                            else:
+                                for i in response_quake.json()['data']:
+                                    hostinfo = str(i['ip']) + ":" + str(i['port'])
+                                    select_list.append(hostinfo)
+                                    if i['service']['name'] == 'http': 
+                                        if 'http' in i['service'].keys():
+                                            title_ip = i['service']['http']['title']
+                                        elif 'response' in i['service'].keys():
+                                            if BeautifulSoup(i['service']['response'],'html.parser').title == None:
+                                                title_ip = 'None'
+                                            else:
+                                                title_ip = str(BeautifulSoup(i['service']['response'],'html.parser').title.string)
+                                        else:
+                                            title_ip = 'None'
+                                        try:
+                                            httpurl = '<a href=\"http://' + str(i['ip']) + ":" + str(i['port']) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(i['ip']) + ":" + str(i['port'])  + '</span></a>'                           
+                                            self.text_print.emit("<font color='#55ff00'>" + "Host: " + httpurl + "<font>")
+                                            self.text_print.emit("<font color='#55ff00'>" + "Title: " + title_ip + "<font>")
+                                            self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(i['service']['name']) + "<font>")
+                                            self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                                            self.res_print.emit("<font color='#55ff00'>" + '[+]'+httpurl+','+ str(i['service']['name']) +','+title_ip+ "<font>")
+                                        except Exception as e:
+                                            pass
+                                    elif i['service']['name'] == 'http/ssl': 
+                                        #  or i['service']['name'] == 'https/ssl'
+                                        if 'http/ssl' in i['service'].keys():
+                                                title_ip = i['service']['http/ssl']['title']
+                                        elif 'response' in i['service'].keys():
+                                            if BeautifulSoup(i['service']['response'],'html.parser').title == None:
+                                                title_ip = 'None'
+                                            else:
+                                                title_ip = str(BeautifulSoup(i['service']['response'],'html.parser').title.string)
+                                        else:
+                                            title_ip = 'None'
+                                        httpurl = '<a href=\"https://' + str(i['ip']) + ":" + str(i['port']) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(i['ip']) + ":" + str(i['port'])  + '</span></a>'                           
+                                        self.text_print.emit("<font color='#55ff00'>" + "Host: " + httpurl + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + "Title: " + str(title_ip) + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(i['service']['name']) + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                                        self.res_print.emit("<font color='#55ff00'>" + '[+]'+httpurl+','+ str(i['service']['name']) +','+str(title_ip)+ "<font>")
+                                    else:
+                                        self.text_print.emit("<font color='#55ff00'>" + "Host: " + str(i['ip']) + ":" + str(i['port']) + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + "protocol: " + str(i['service']['name']) + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                                        self.res_print.emit("<font color='#55ff00'>" + '[+]'+ str(i['ip']) + ":" + str(i['port']) +','+ str(i['service']['name']) + "<font>")
+                            self.notice_print.emit("<font color='#55ff00'>" + ">Quake搜索完成" + "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" + "==================" + "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" + ">Quake当前资产:" + str(response_quake.json()['meta']['pagination']['count']) + "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" + ">Quake重复资产:" + str(len(select_list)-len(list(set(select_list)))) + "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" + ">Quake总计资产:" + str(response_quake.json()['meta']['pagination']['total']) + "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" + ">耗时:" + str(round(time.time() - t0,4)) + "秒" + "<font>")
+                            if self.log_time > 5:
+                                os.remove("./temp/quake_search.log")
+                                with open('./temp/quake_search.log','w+',encoding='utf8') as quake_log_write:
+                                    quake_log_write.write(quake_res_log_new)
+                                    self.notice_print.emit("<font color='#55ff00'>" + ">Quake日志清理完成" + "<font>")
+                            else:
+                                with open('./temp/quake_search.log','w',encoding='utf8') as quake_log_write:
+                                    info[self.basic_qstr] = response_quake.json()
+                                    quake_res_log = json.dumps(info,indent=3) 
+                                    quake_log_write.write(quake_res_log)
+
+                                self.notice_print.emit("<font color='#55ff00'>" + ">Quake日志存储完成" + "<font>")
             else:
                 proxy_alive = {}
                 t0 = time.time()
@@ -1132,62 +1488,64 @@ class shodan_search_qthread(QThread):
             shodan_api = shodan.Shodan(self.key)
             select_list = []
             t0 = time.time()
-            
-            try:
-                results = shodan_api.search(self.qstr)
-                shodan_res = {}
-                shodan_res[self.basic_qstr] = results
-                shodan_res_log_new = json.dumps(shodan_res,indent=3) 
-                if results['total'] == 0:
-                    self.text_print.emit("<font color='#ff0000'>" + ">Shodan没有相关资产" + "<font>")
-                else:
-                    for i in results['matches']:
-                        hostinfo = str(i['ip_str']) + ":" + str(i['port'])
-                        select_list.append(hostinfo)
-                        if i['_shodan']['module'] == 'http' :  
-                            httpurl = '<a href=\"http://' + str(i['ip_str']) + ":" + str(i['port']) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(i['ip_str']) + ":" + str(i['port'])  + '</span></a>'                  
-                            self.text_print.emit("<font color='#55ff00'>" + "Host: " + httpurl + "<font>")                    
-                            self.text_print.emit("<font color='#55ff00'>" + "Title: " + str(i['http']['title']) + "<font>")
-                            self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(i['_shodan']['module']) + "<font>")
-                            self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
-                            self.res_print.emit("<font color='#55ff00'>" + '[+]' +httpurl+','+str(i['_shodan']['module'])+','+str(i['http']['title'])+ "<font>")
-                        elif i['_shodan']['module'] == 'https' or i['_shodan']['module'] == 'https-simple-new':
-                            httpurl = '<a href=\"https://' + str(i['ip_str']) + ":" + str(i['port']) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(i['ip_str']) + ":" + str(i['port'])  + '</span></a>'                  
-                            self.text_print.emit("<font color='#55ff00'>" + "Host: " + httpurl + "<font>")
-                            if 'http' not in i:
-                                title = "Title: None"
-                                self.text_print.emit("<font color='#55ff00'>" + "Title: " + 'None' + "<font>")
-                            else:   
-                                title = str(i['http']['title'])            
-                                self.text_print.emit("<font color='#55ff00'>" + "Title: " + str(i['http']['title']) + "<font>")
-                            self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(i['_shodan']['module']) + "<font>")
-                            self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
-                            self.res_print.emit("<font color='#55ff00'>" + '[+]' +httpurl+','+str(i['_shodan']['module'])+','+title+ "<font>")
-                        else:            
-                            self.text_print.emit("<font color='#55ff00'>" + "Host: " + str(i['ip_str']) + ":" + str(i['port'])  + "<font>")
-                            self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(i['_shodan']['module']) + "<font>")
-                            self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
-                            self.res_print.emit("<font color='#55ff00'>" + '[+]'+str(i['ip_str']) + ":" + str(i['port'])+','+str(i['_shodan']['module']) + "<font>")
-                    
-                    self.notice_print.emit("<font color='#55ff00'>" + ">Shodan查询完成" + "<font>")
-                    self.count_print.emit("<font color='#55ff00'>" + "==================" + "<font>")
-                    self.count_print.emit("<font color='#55ff00'>" + ">Shodan当前资产:" + str(len(results['matches'])) + "<font>")
-                    self.count_print.emit("<font color='#55ff00'>" + ">Shodan重复资产:" + str(len(select_list)-len(list(set(select_list)))) + "<font>")
-                    self.count_print.emit("<font color='#55ff00'>" + ">Shodan总计资产:" + str(results['total']) +  "<font>")
-                    self.count_print.emit("<font color='#55ff00'>" + ">耗时:" + str(round(time.time() - t0,4)) + "秒"  + "<font>")
-                    if self.log_time > 5:
-                        os.remove("./temp/shodan_search.log")
-                        with open('./temp/shodan_search.log','w+',encoding='utf8') as shodan_log_write:
-                            shodan_log_write.write(shodan_res_log_new)
-                        self.notice_print.emit("<font color='#55ff00'>" + ">Shodan日志清理完成" + "<font>")
+            if 'app=' in self.basic_qstr:
+                self.text_print.emit("<font color='#ff0000'>" + ">Shodan不支持APP搜索" + "<font>")
+            else:
+                try:
+                    results = shodan_api.search(self.qstr)
+                    shodan_res = {}
+                    shodan_res[self.basic_qstr] = results
+                    shodan_res_log_new = json.dumps(shodan_res,indent=3) 
+                    if results['total'] == 0:
+                        self.text_print.emit("<font color='#ff0000'>" + ">Shodan没有相关资产" + "<font>")
                     else:
-                        with open('./temp/shodan_search.log','w',encoding='utf8') as shodan_log_write:
-                            info[self.basic_qstr] = results
-                            shodan_res_log = json.dumps(info,indent=3) 
-                            shodan_log_write.write(shodan_res_log)
-                        self.notice_print.emit("<font color='#55ff00'>" + ">Shoan日志存储完成" + "<font>")
-            except shodan.APIError as e:
-                self.text_print.emit("<font color='#ff0000'>" + ">Shodan API错误" + "<font>")
+                        for i in results['matches']:
+                            hostinfo = str(i['ip_str']) + ":" + str(i['port'])
+                            select_list.append(hostinfo)
+                            if i['_shodan']['module'] == 'http' :  
+                                httpurl = '<a href=\"http://' + str(i['ip_str']) + ":" + str(i['port']) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(i['ip_str']) + ":" + str(i['port'])  + '</span></a>'                  
+                                self.text_print.emit("<font color='#55ff00'>" + "Host: " + httpurl + "<font>")                    
+                                self.text_print.emit("<font color='#55ff00'>" + "Title: " + str(i['http']['title']) + "<font>")
+                                self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(i['_shodan']['module']) + "<font>")
+                                self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                                self.res_print.emit("<font color='#55ff00'>" + '[+]' +httpurl+','+str(i['_shodan']['module'])+','+str(i['http']['title'])+ "<font>")
+                            elif i['_shodan']['module'] == 'https' or i['_shodan']['module'] == 'https-simple-new':
+                                httpurl = '<a href=\"https://' + str(i['ip_str']) + ":" + str(i['port']) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(i['ip_str']) + ":" + str(i['port'])  + '</span></a>'                  
+                                self.text_print.emit("<font color='#55ff00'>" + "Host: " + httpurl + "<font>")
+                                if 'http' not in i:
+                                    title = "Title: None"
+                                    self.text_print.emit("<font color='#55ff00'>" + "Title: " + 'None' + "<font>")
+                                else:   
+                                    title = str(i['http']['title'])            
+                                    self.text_print.emit("<font color='#55ff00'>" + "Title: " + str(i['http']['title']) + "<font>")
+                                self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(i['_shodan']['module']) + "<font>")
+                                self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                                self.res_print.emit("<font color='#55ff00'>" + '[+]' +httpurl+','+str(i['_shodan']['module'])+','+title+ "<font>")
+                            else:            
+                                self.text_print.emit("<font color='#55ff00'>" + "Host: " + str(i['ip_str']) + ":" + str(i['port'])  + "<font>")
+                                self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(i['_shodan']['module']) + "<font>")
+                                self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                                self.res_print.emit("<font color='#55ff00'>" + '[+]'+str(i['ip_str']) + ":" + str(i['port'])+','+str(i['_shodan']['module']) + "<font>")
+                        
+                        self.notice_print.emit("<font color='#55ff00'>" + ">Shodan查询完成" + "<font>")
+                        self.count_print.emit("<font color='#55ff00'>" + "==================" + "<font>")
+                        self.count_print.emit("<font color='#55ff00'>" + ">Shodan当前资产:" + str(len(results['matches'])) + "<font>")
+                        self.count_print.emit("<font color='#55ff00'>" + ">Shodan重复资产:" + str(len(select_list)-len(list(set(select_list)))) + "<font>")
+                        self.count_print.emit("<font color='#55ff00'>" + ">Shodan总计资产:" + str(results['total']) +  "<font>")
+                        self.count_print.emit("<font color='#55ff00'>" + ">耗时:" + str(round(time.time() - t0,4)) + "秒"  + "<font>")
+                        if self.log_time > 5:
+                            os.remove("./temp/shodan_search.log")
+                            with open('./temp/shodan_search.log','w+',encoding='utf8') as shodan_log_write:
+                                shodan_log_write.write(shodan_res_log_new)
+                            self.notice_print.emit("<font color='#55ff00'>" + ">Shodan日志清理完成" + "<font>")
+                        else:
+                            with open('./temp/shodan_search.log','w',encoding='utf8') as shodan_log_write:
+                                info[self.basic_qstr] = results
+                                shodan_res_log = json.dumps(info,indent=3) 
+                                shodan_log_write.write(shodan_res_log)
+                            self.notice_print.emit("<font color='#55ff00'>" + ">Shoan日志存储完成" + "<font>")
+                except shodan.APIError as e:
+                    self.text_print.emit("<font color='#ff0000'>" + ">Shodan API错误" + "<font>")
 
 
 
@@ -1258,66 +1616,74 @@ class censys_search_qthread(QThread):
             if '++' in self.basic_qstr or '--' in self.basic_qstr or '^^' in self.basic_qstr:
                 self.text_print.emit("<font color='#ff0000'>" + ">Censys暂不支持多语法搜索"  + "<font>")
             else:
-                
+
                 if self.basic_qstr.split('=')[0] in qstr_list:
                     # qstrb = re.findall('\d*\.\d*\.\d*\.\d*',self.qstr)[0]
                     try:
                         censys_res = requests.post(url="https://www.censys.io/api/v1/search/ipv4",data=json.dumps(self.censys_str),auth=(self.uid, self.secret))
+                        if 'error_type' in censys_res.json().keys():
+                            if censys_res.json()['error_type'] == 'unauthorized':
+                                self.text_print.emit("<font color='#ff0000'>" + ">Censys API 错误" + "<font>")
+                            elif censys_res.json()['error_type'] == 'es_transport_error':
+                                self.text_print.emit("<font color='#ff0000'>" + ">没有资产信息" + "<font>")
+                            else:
+                                self.text_print.emit("<font color='#ff0000'>" + ">Censys API 错误" + "<font>")
+                        else:
+                            
+                            if len(censys_res.json()['results']) == 0:
+                                self.text_print.emit("<font color='#ff0000'>" + ">没有资产信息" + "<font>")
+                            else:
+                                censys_res1 = {}
+                                censys_res1[self.basic_qstr] = censys_res.json()
+                                censys_res_log_new = json.dumps(censys_res1,indent=3) 
+                                for i in censys_res.json()['results'][0]['protocols']:
+                                    info_ip = i.split('/')
+                                    hostinfo = str(censys_res.json()['results'][0]['ip']) + ":" + str(info_ip[0])
+                                    select_list.append(hostinfo)
+                                    if info_ip[1] == 'http' or info_ip[1] == 'https':
+                                        title_ip = 'None'
+                                        httpurl = '<a href=\"'+ info_ip[1] +'://' + str(censys_res.json()['results'][0]['ip']) + ":" + str(info_ip[0]) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(censys_res.json()['results'][0]['ip']) + ":" + str(info_ip[0])  + '</span></a>'
+                                        self.text_print.emit("<font color='#55ff00'>" + "Host: " + httpurl + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + "Title: " + title_ip + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(info_ip[1]) + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                                        self.res_print.emit("<font color='#55ff00'>" +'[+]'+ httpurl +','+ str(info_ip[1]) +',' + title_ip+"<font>")
+                                    else:
+                                        self.text_print.emit("<font color='#55ff00'>" + "Host: " + str(censys_res.json()['results'][0]['ip']) + ":" + str(info_ip[0])  + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(info_ip[1]) + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                                        self.res_print.emit("<font color='#55ff00'>" + '[+]' + str(censys_res.json()['results'][0]['ip']) + ":" + str(info_ip[0]) +','+str(info_ip[1]) + "<font>")
+                                self.notice_print.emit("<font color='#55ff00'>" + ">Censys查询完成" + "<font>")
+                                self.count_print.emit("<font color='#55ff00'>" + "==================" + "<font>")
+                                self.count_print.emit("<font color='#55ff00'>" + ">Censys当前资产:" + str(len(censys_res.json()['results'][0]['protocols'])) + "<font>")
+                                self.count_print.emit("<font color='#55ff00'>" + ">Censys重复资产:" + str(len(select_list)-len(list(set(select_list)))) + "<font>")
+                                self.count_print.emit("<font color='#55ff00'>" + ">Censys总计资产:" + str(len(censys_res.json()['results'][0]['protocols'])) +  "<font>")
+                                self.count_print.emit("<font color='#55ff00'>" + ">耗时:" + str(round(time.time() - t0,4)) + "秒"  + "<font>")
+                                if self.log_time > 5:
+                                    try:
+                                        os.remove("./temp/censys_search.log")
+                                        with open('./temp/censys_search.log','w+',encoding='utf8') as censys_log_write:
+                                            censys_log_write.write(censys_res_log_new)
+                                        self.notice_print.emit("<font color='#55ff00'>" + ">Censys日志清理完成" + "<font>")
+                                    except Exception:
+                                        self.notice_print.emit("<font color='#ff0000'>" + ">Censys日志文件不存在" + "<font>")
+                                else:
+                                    try:
+                                        with open('./temp/censys_search.log','w',encoding='utf8') as censys_log_write:
+                                            info[self.basic_qstr] = censys_res.json()
+                                            censys_res_log = json.dumps(info,indent=3) 
+                                            censys_log_write.write(censys_res_log)
+                                        self.notice_print.emit("<font color='#55ff00'>" + ">Censys日志存储完成" + "<font>")
+                                    except Exception:
+                                        self.notice_print.emit("<font color='#ff0000'>" + ">Censys日志文件不存在" + "<font>")
                     except Exception:
                         self.text_print.emit("<font color='#ff0000'>" + ">Censys连接超时"  + "<font>")
-                    if 'error_type' in censys_res.json().keys():
-                        if censys_res.json()['error_type'] == 'unauthorized':
-                            self.text_print.emit("<font color='#ff0000'>" + ">Censys API 错误" + "<font>")
-                        elif censys_res.json()['error_type'] == 'es_transport_error':
-                            self.text_print.emit("<font color='#ff0000'>" + ">没有资产信息" + "<font>")
-                        else:
-                            self.text_print.emit("<font color='#ff0000'>" + ">Censys API 错误" + "<font>")
-                    else:
-                        if len(censys_res.json()['results']) == 0:
-                            self.text_print.emit("<font color='#ff0000'>" + ">没有资产信息" + "<font>")
-                        else:
-                            for i in censys_res.json()['results'][0]['protocols']:
-                                info_ip = i.split('/')
-                                hostinfo = str(censys_res.json()['results'][0]['ip']) + ":" + str(info_ip[0])
-                                select_list.append(hostinfo)
-                                if info_ip[1] == 'http' or info_ip[1] == 'https':
-                                    title_ip = 'None'
-                                    httpurl = '<a href=\"'+ info_ip[1] +'://' + str(censys_res.json()['results'][0]['ip']) + ":" + str(info_ip[0]) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(censys_res.json()['results'][0]['ip']) + ":" + str(info_ip[0])  + '</span></a>'
-                                    self.text_print.emit("<font color='#55ff00'>" + "Host: " + httpurl + "<font>")
-                                    self.text_print.emit("<font color='#55ff00'>" + "Title: " + title_ip + "<font>")
-                                    self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(info_ip[1]) + "<font>")
-                                    self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
-                                    self.res_print.emit("<font color='#55ff00'>" +'[+]'+ httpurl +','+ str(info_ip[1]) +',' + title_ip+"<font>")
-                                else:
-                                    self.text_print.emit("<font color='#55ff00'>" + "Host: " + str(censys_res.json()['results'][0]['ip']) + ":" + str(info_ip[0])  + "<font>")
-                                    self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(info_ip[1]) + "<font>")
-                                    self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
-                                    self.res_print.emit("<font color='#55ff00'>" + '[+]' + str(censys_res.json()['results'][0]['ip']) + ":" + str(info_ip[0]) +','+str(info_ip[1]) + "<font>")
-                            self.notice_print.emit("<font color='#55ff00'>" + ">Censys查询完成" + "<font>")
-                            self.count_print.emit("<font color='#55ff00'>" + "==================" + "<font>")
-                            self.count_print.emit("<font color='#55ff00'>" + ">Censys当前资产:" + str(len(censys_res.json()['results'][0]['protocols'])) + "<font>")
-                            self.count_print.emit("<font color='#55ff00'>" + ">Censys重复资产:" + str(len(select_list)-len(list(set(select_list)))) + "<font>")
-                            self.count_print.emit("<font color='#55ff00'>" + ">Censys总计资产:" + str(len(censys_res.json()['results'][0]['protocols'])) +  "<font>")
-                            self.count_print.emit("<font color='#55ff00'>" + ">耗时:" + str(round(time.time() - t0,4)) + "秒"  + "<font>")
-                            if self.log_time > 5:
-                                try:
-                                    os.remove("./temp/censys_search.log")
-                                    with open('./temp/censys_search.log','w+',encoding='utf8') as censys_log_write:
-                                        censys_log_write.write(censys_res_log_new)
-                                    self.notice_print.emit("<font color='#55ff00'>" + ">Censys日志清理完成" + "<font>")
-                                except Exception:
-                                    self.notice_print.emit("<font color='#ff0000'>" + ">Censys日志文件不存在" + "<font>")
-                            else:
-                                try:
-                                    with open('./temp/censys_search.log','w',encoding='utf8') as censys_log_write:
-                                        info[self.basic_qstr] = censys_res.json()
-                                        censys_res_log = json.dumps(info,indent=3) 
-                                        censys_log_write.write(censys_res_log)
-                                    self.notice_print.emit("<font color='#55ff00'>" + ">Censys日志存储完成" + "<font>")
-                                except Exception:
-                                    self.notice_print.emit("<font color='#ff0000'>" + ">Censys日志文件不存在" + "<font>")
+                    
                 else:
-                    self.text_print.emit("<font color='#ff0000'>" + ">Censys暂时只支持IP,IPS,DOAMIN"  + "<font>")
+                    if "app=" in self.basic_qstr:
+                        self.text_print.emit("<font color='#ff0000'>" + ">Censys不支持APP搜索"  + "<font>")
+                    else:
+                        self.text_print.emit("<font color='#ff0000'>" + ">Censys暂时只支持IP,IPS,DOAMIN"  + "<font>")
             
 
 class binaryedge_search_qthread(QThread):
@@ -1432,150 +1798,296 @@ class binaryedge_search_qthread(QThread):
                     # qstrb = re.findall('\d*\.\d*\.\d*\.\d*',self.basic_qstr)[0]
                     try:
                         binaryedge_res = requests.get(self.api_ip + qstrb,headers=self.header)
+                        if len(binaryedge_res.json().keys()) <=3:
+                            if 'token'in binaryedge_res.json()['message']:
+                                self.text_print.emit("<font color='#ff0000'>" + ">Binaryedge api错误" + "<font>")
+                                self.text_print.emit('开始整理数据')
+                            elif 'plan'in binaryedge_res.json()['message']:
+                                self.text_print.emit("<font color='#ff0000'>" + ">Binaryedge 账号套餐不支持" + "<font>")
+                                self.text_print.emit('开始整理数据')
+                            else:
+                                self.text_print.emit("<font color='#ff0000'>" + ">Binaryedge 语法错误" + "<font>")
+                                self.text_print.emit('开始整理数据')
+                            
+                        else:
+                            if binaryedge_res.json()['total'] == 0:
+                                self.text_print.emit("<font color='#ff0000'>" + ">Binaryedge没有资产" + "<font>")
+                                self.text_print.emit('开始整理数据')
+                            else:
+                                binaryedge_res1 = {}
+                                binaryedge_res1[self.basic_qstr] = binaryedge_res.json()
+                                binaryedge_res_log_new = json.dumps(binaryedge_res1,indent=3)
+                                for i in binaryedge_res.json()['events']:
+                                    target = i['results'][0]['target']['ip']
+                                    target_port = i['results'][0]['target']['port']
+                                    hostinfo = str(target) + ":" + str(target_port)
+
+                                    for j in i['results']:
+                                        if 'service' in j['result']['data'].keys():
+                                            protocol_ip = j['result']['data']['service']['name']
+                                            break
+
+                                    
+                                    
+                                    select_list.append(hostinfo)
+                                    if protocol_ip == 'http' or protocol_ip == 'ssl/http':
+                                        for t in i['results']:
+                                            if 'response' in t['result']['data'].keys():
+                                                # title_ip = str(BeautifulSoup(t['result']['data']['response']['body']['content'],'html.parser').title.string)
+                                                if t['result']['data']['response']['title'] == None:
+                                                    title_ip = 'None'
+                                                else:
+                                                    title_ip = t['result']['data']['response']['title']
+                                                break
+                                            elif 'service' in t['result']['data'].keys():
+                                                if BeautifulSoup(t['result']['data']['service']['banner'],'html.parser').title == None:
+                                                    title_ip = 'None'   
+                                                else:                                    
+                                                    title_ip = str(BeautifulSoup(t['result']['data']['service']['banner'],'html.parser').title.string)
+                                                break
+                                    
+                                        httpurl = '<a href=\"'+ protocol_ip +'://' + str(target) + ":" + str(target_port) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(target) + ":" + str(target_port)  + '</span></a>'
+                                        self.text_print.emit("<font color='#55ff00'>" + "Host: " + httpurl + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + "Title: " + title_ip + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(protocol_ip) + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                                        self.res_print.emit("<font color='#55ff00'>" + '[+]'+httpurl+','+ str(protocol_ip) +','+title_ip + "<font>")
+                                    else:
+                                        self.text_print.emit("<font color='#55ff00'>" + "Host: " + str(hostinfo ) + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(protocol_ip) + "<font>")
+                                        self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                                        self.res_print.emit("<font color='#55ff00'>" + '[+]'+str(hostinfo )+','+str(protocol_ip) + "<font>")
+
+                            self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge查询完成" + "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" + "==================" + "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge当前资产:" + str(len(binaryedge_res.json()['events'])) + "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge重复资产:" + str(len(select_list)-len(list(set(select_list)))) + "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge总计资产:" + str(binaryedge_res.json()['total']) +  "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" + ">耗时:" + str(round(time.time() - t0,4)) + "秒"  + "<font>")
+                            self.text_print.emit('开始整理数据')
+                            if self.log_time > 5:
+                                try:
+                                    with open('./temp/binaryedge_search.log','w+',encoding='utf8') as binaryedge_log_write:
+                                        binaryedge_log_write.write(binaryedge_res_log_new)
+                                    self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge日志清理完成" + "<font>")
+                                except Exception:
+                                    self.notice_print.emit("<font color='#ff0000'>" + ">Binaryedge日志文件不存在" + "<font>")
+                            else:
+                                try:
+                                    with open('./temp/binaryedge_search.log','w',encoding='utf8') as binaryedge_log_write:
+                                        info[self.basic_qstr] = binaryedge_res.json()
+                                        binaryedge_res_log = json.dumps(info,indent=3) 
+                                        binaryedge_log_write.write(binaryedge_res_log)
+                                    self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge日志存储完成" + "<font>")
+                                except Exception:
+                                    self.notice_print.emit("<font color='#ff0000'>" + ">Binaryedge日志文件不存在" + "<font>")
                     except Exception:
                         self.text_print.emit("<font color='#ff0000'>" + ">Binaryedge连接超时"  + "<font>")
                         self.text_print.emit('开始整理数据')
-                    if len(binaryedge_res.json().keys()) <=3:
-                        if 'token'in binaryedge_res.json()['message']:
-                            self.text_print.emit("<font color='#ff0000'>" + ">Binaryedge api错误" + "<font>")
-                            self.text_print.emit('开始整理数据')
-                        elif 'plan'in binaryedge_res.json()['message']:
-                            self.text_print.emit("<font color='#ff0000'>" + ">Binaryedge 账号套餐不支持" + "<font>")
-                            self.text_print.emit('开始整理数据')
-                        else:
-                            self.text_print.emit("<font color='#ff0000'>" + ">Binaryedge 语法错误" + "<font>")
-                            self.text_print.emit('开始整理数据')
-                        
-                    else:
-                        if binaryedge_res.json()['total'] == 0:
-                            self.text_print.emit("<font color='#ff0000'>" + ">Binaryedge没有资产" + "<font>")
-                            self.text_print.emit('开始整理数据')
-                        else:
-                            for i in binaryedge_res.json()['events']:
-                                target = i['results'][0]['target']['ip']
-                                target_port = i['results'][0]['target']['port']
-                                hostinfo = str(target) + ":" + str(target_port)
-
-                                for j in i['results']:
-                                    if 'service' in j['result']['data'].keys():
-                                        protocol_ip = j['result']['data']['service']['name']
-                                        break
-
-                                
-                                
-                                select_list.append(hostinfo)
-                                if protocol_ip == 'http' or protocol_ip == 'ssl/http':
-                                    for t in i['results']:
-                                        if 'response' in t['result']['data'].keys():
-                                            # title_ip = str(BeautifulSoup(t['result']['data']['response']['body']['content'],'html.parser').title.string)
-                                            if t['result']['data']['response']['title'] == None:
-                                                title_ip = 'None'
-                                            else:
-                                                title_ip = t['result']['data']['response']['title']
-                                            break
-                                        elif 'service' in t['result']['data'].keys():
-                                            if BeautifulSoup(t['result']['data']['service']['banner'],'html.parser').title == None:
-                                                title_ip = 'None'   
-                                            else:                                    
-                                                title_ip = str(BeautifulSoup(t['result']['data']['service']['banner'],'html.parser').title.string)
-                                            break
-                                   
-                                    httpurl = '<a href=\"'+ protocol_ip +'://' + str(target) + ":" + str(target_port) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(target) + ":" + str(target_port)  + '</span></a>'
-                                    self.text_print.emit("<font color='#55ff00'>" + "Host: " + httpurl + "<font>")
-                                    self.text_print.emit("<font color='#55ff00'>" + "Title: " + title_ip + "<font>")
-                                    self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(protocol_ip) + "<font>")
-                                    self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
-                                    self.res_print.emit("<font color='#55ff00'>" + '[+]'+httpurl+','+ str(protocol_ip) +','+title_ip + "<font>")
-                                else:
-                                    self.text_print.emit("<font color='#55ff00'>" + "Host: " + str(hostinfo ) + "<font>")
-                                    self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + str(protocol_ip) + "<font>")
-                                    self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
-                                    self.res_print.emit("<font color='#55ff00'>" + '[+]'+str(hostinfo )+','+str(protocol_ip) + "<font>")
-
-                        self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge查询完成" + "<font>")
-                        self.count_print.emit("<font color='#55ff00'>" + "==================" + "<font>")
-                        self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge当前资产:" + str(len(binaryedge_res.json()['events'])) + "<font>")
-                        self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge重复资产:" + str(len(select_list)-len(list(set(select_list)))) + "<font>")
-                        self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge总计资产:" + str(binaryedge_res.json()['total']) +  "<font>")
-                        self.count_print.emit("<font color='#55ff00'>" + ">耗时:" + str(round(time.time() - t0,4)) + "秒"  + "<font>")
-                        self.text_print.emit('开始整理数据')
-                        if self.log_time > 5:
-                            try:
-                                with open('./temp/binaryedge_search.log','w+',encoding='utf8') as binaryedge_log_write:
-                                    binaryedge_log_write.write(binaryedge_res_log_new)
-                                self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge日志清理完成" + "<font>")
-                            except Exception:
-                                self.notice_print.emit("<font color='#ff0000'>" + ">Binaryedge日志文件不存在" + "<font>")
-                        else:
-                            try:
-                                with open('./temp/binaryedge_search.log','w',encoding='utf8') as binaryedge_log_write:
-                                    info[self.basic_qstr] = binaryedge_res.json()
-                                    binaryedge_res_log = json.dumps(info,indent=3) 
-                                    binaryedge_log_write.write(binaryedge_res_log)
-                                self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge日志存储完成" + "<font>")
-                            except Exception:
-                                self.notice_print.emit("<font color='#ff0000'>" + ">Binaryedge日志文件不存在" + "<font>")
+                    
                 elif 'domain=' in self.basic_qstr:
                     qstrb = self.basic_qstr.split('=')[-1]
                     try:
                         binaryedge_res = requests.get(self.api_domain + qstrb,headers=self.header)
+                        if len(binaryedge_res.json().keys()) <=3:
+                            if 'token'in binaryedge_res.json()['message']:
+                                self.text_print.emit("<font color='#ff0000'>" + ">Binaryedge api错误" + "<font>")
+                                self.text_print.emit('开始整理数据')
+                            elif 'plan'in binaryedge_res.json()['message']:
+                                self.text_print.emit("<font color='#ff0000'>" + ">Binaryedge 账号套餐不支持" + "<font>")
+                                self.text_print.emit('开始整理数据')
+                            elif 'Bad domain'in binaryedge_res.json()['message']:
+                                self.text_print.emit("<font color='#ff0000'>" + ">Binaryedge 域名没有相关结果" + "<font>")
+                                self.text_print.emit('开始整理数据')
+                            else:
+                                self.text_print.emit("<font color='#ff0000'>" + binaryedge_res.json() + "<font>")
+                                self.text_print.emit('开始整理数据')
+                        else:
+                            binaryedge_res1 = {}
+                            binaryedge_res1[self.basic_qstr] = binaryedge_res.json()
+                            binaryedge_res_log_new = json.dumps(binaryedge_res1,indent=3)
+                            for i in binaryedge_res.json()['events']:                            
+                                self.text_print.emit("<font color='#55ff00'>" + "Host: " + str(i) + "<font>")
+                                self.text_print.emit("<font color='#55ff00'>" + "Protocol: domain" + "<font>")
+                                self.text_print.emit("<font color='#55ff00'>" + "Title: None" + "<font>")
+                                self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                                self.res_print.emit("<font color='#55ff00'>" + '[+]'+str(i)+ ',' +'https' +','+ 'None' + "<font>")
+                                select_list.append(i)
+
+                            self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge查询完成" + "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" + "==================" + "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge当前资产:" + str(len(binaryedge_res.json()['events'])) + "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge重复资产:" + str(len(select_list)-len(list(set(select_list)))) + "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge总计资产:" + str(binaryedge_res.json()['total']) +  "<font>")
+                            self.count_print.emit("<font color='#55ff00'>" + ">耗时:" + str(round(time.time() - t0,4)) + "秒"  + "<font>")
+                            self.text_print.emit('开始整理数据')
+                            if self.log_time > 5:
+                                try:
+                                    os.remove('./temp/binaryedge_search.log')
+                                    with open('./temp/binaryedge_search.log','w+',encoding='utf8') as binaryedge_log_write:
+                                        binaryedge_log_write.write(binaryedge_res_log_new)
+                                    self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge日志清理完成" + "<font>")
+                                except Exception:
+                                    self.notice_print.emit("<font color='#ff0000'>" + ">Binaryedge日志文件不存在" + "<font>")
+                            else:
+                                try:
+                                    with open('./temp/binaryedge_search.log','w',encoding='utf8') as binaryedge_log_write:
+                                        info[self.basic_qstr] = binaryedge_res.json()
+                                        binaryedge_res_log = json.dumps(info,indent=3) 
+                                        binaryedge_log_write.write(binaryedge_res_log)
+                                    self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge日志存储完成" + "<font>")
+                                except Exception:
+                                    self.notice_print.emit("<font color='#ff0000'>" + ">Binaryedge日志文件不存在" + "<font>")
                     except Exception:
                         self.text_print.emit("<font color='#ff0000'>" + ">Binaryedge连接超时"  + "<font>")
                         self.text_print.emit('开始整理数据')
-                    if len(binaryedge_res.json().keys()) <=3:
-                        if 'token'in binaryedge_res.json()['message']:
-                            self.text_print.emit("<font color='#ff0000'>" + ">Binaryedge api错误" + "<font>")
-                            self.text_print.emit('开始整理数据')
-                        elif 'plan'in binaryedge_res.json()['message']:
-                            self.text_print.emit("<font color='#ff0000'>" + ">Binaryedge 账号套餐不支持" + "<font>")
-                            self.text_print.emit('开始整理数据')
-                        elif 'Bad domain'in binaryedge_res.json()['message']:
-                            self.text_print.emit("<font color='#ff0000'>" + ">Binaryedge 域名没有相关结果" + "<font>")
-                            self.text_print.emit('开始整理数据')
-                        else:
-                            self.text_print.emit("<font color='#ff0000'>" + binaryedge_res.json() + "<font>")
-                            self.text_print.emit('开始整理数据')
-                    else:
-                        for i in binaryedge_res.json()['events']:                            
-                            self.text_print.emit("<font color='#55ff00'>" + "Host: " + str(i) + "<font>")
-                            self.text_print.emit("<font color='#55ff00'>" + "Protocol: domain" + "<font>")
-                            self.text_print.emit("<font color='#55ff00'>" + "Title: None" + "<font>")
-                            self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
-                            self.res_print.emit("<font color='#55ff00'>" + '[+]'+str(i)+ ',' +'https' +','+ 'None' + "<font>")
-                            select_list.append(i)
-
-                        self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge查询完成" + "<font>")
-                        self.count_print.emit("<font color='#55ff00'>" + "==================" + "<font>")
-                        self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge当前资产:" + str(len(binaryedge_res.json()['events'])) + "<font>")
-                        self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge重复资产:" + str(len(select_list)-len(list(set(select_list)))) + "<font>")
-                        self.count_print.emit("<font color='#55ff00'>" + ">Binaryedge总计资产:" + str(binaryedge_res.json()['total']) +  "<font>")
-                        self.count_print.emit("<font color='#55ff00'>" + ">耗时:" + str(round(time.time() - t0,4)) + "秒"  + "<font>")
-                        self.text_print.emit('开始整理数据')
-                        if self.log_time > 5:
-                            try:
-                                os.remove('./temp/binaryedge_search.log')
-                                with open('./temp/binaryedge_search.log','w+',encoding='utf8') as binaryedge_log_write:
-                                    binaryedge_log_write.write(binaryedge_res_log_new)
-                                self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge日志清理完成" + "<font>")
-                            except Exception:
-                                self.notice_print.emit("<font color='#ff0000'>" + ">Binaryedge日志文件不存在" + "<font>")
-                        else:
-                            try:
-                                with open('./temp/binaryedge_search.log','w',encoding='utf8') as binaryedge_log_write:
-                                    info[self.basic_qstr] = binaryedge_res.json()
-                                    binaryedge_res_log = json.dumps(info,indent=3) 
-                                    binaryedge_log_write.write(binaryedge_res_log)
-                                self.notice_print.emit("<font color='#55ff00'>" + ">Binaryedge日志存储完成" + "<font>")
-                            except Exception:
-                                self.notice_print.emit("<font color='#ff0000'>" + ">Binaryedge日志文件不存在" + "<font>")
+                    
 
 
 
                 else:
                     self.text_print.emit("<font color='#ff0000'>" + ">Binaryedge暂不支持此扫描"  + "<font>")
                     self.text_print.emit('开始整理数据')
-            
 
+            
+class rapiddns_search_qthread(QThread):
+    text_print = pyqtSignal(str)
+    notice_print = pyqtSignal(str)
+    count_print = pyqtSignal(str)
+    res_print = pyqtSignal(str)
+
+    def __init__(self,a,b,c):
+        super(rapiddns_search_qthread,self).__init__()
+        self.basic_qstr = a.strip()
+        self.log_time = b        
+        self.proxy_flag = c
+        self.headers = {                     
+                        "User-Agent": random.choice(USER_AGENTS),
+        }
+    
+    def run(self):
+        if os.path.getsize('./temp/rapiddns_search.log') > 0:
+            try:
+                with open('./temp/rapiddns_search.log','r',encoding='utf8') as rapiddns_search_1:
+                    info = json.load(rapiddns_search_1)
+            except Exception:
+                pass
+        else:
+            info = {}
+        
+
+        if self.basic_qstr in list(info.keys()):
+            histtory_search = info[self.basic_qstr]
+            for i in histtory_search['data']:
+                httpurl = '<a href=\"http://' + str(i['name']) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(i['name'])  + '</span></a>'
+                self.text_print.emit("<font color='#55ff00'>" + "[+]"+ httpurl +','+ 'http' +',' +'title: None'+ "<font>")
+            self.notice_print.emit("<font color='#55ff00'>" + ">Rapiddns历史查询完成" + "<font>")
+
+        else:
+            if "ip=" in self.basic_qstr:
+                try:
+                    ip_name = requests.get(url='https://rapiddns.io/api/v1/'+ self.basic_qstr.split('=')[1] +'?size=100&page=1&t=1',headers=self.headers)
+                    if ip_name.json()['total'] == 0:
+                        pass
+                    else:
+                        rapiddns_res = {}
+                        rapiddns_res[self.basic_qstr] = ip_name.json()
+                        rapiddns_res_log_new = json.dumps(rapiddns_res,indent=3)
+                        for i in ip_name.json()['data']:
+                            httpurl = '<a href=\"http://' + str(i['name']) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(i['name'])  + '</span></a>'
+                            self.text_print.emit("<font color='#55ff00'>" + "[+]"+ httpurl +','+ 'http' +',' +'title: None'+ "<font>")
+                        
+                        self.notice_print.emit("<font color='#55ff00'>" + ">Rapiddns查询完成" + "<font>")
+
+                        if self.log_time > 30:
+                            try:
+                                os.remove('./temp/rapiddns_search.log')
+                                with open('./temp/rapiddns_search.log','w+',encoding='utf8') as rapiddns_log_write:
+                                    rapiddns_log_write.write(rapiddns_res_log_new)
+                                self.notice_print.emit("<font color='#55ff00'>" + ">Rapiddns日志清除完成" + "<font>")
+                            except Exception:
+                                pass
+                        else:
+                            try:
+                                with open('./temp/rapiddns_search.log','w',encoding='utf8') as rapiddns_log_write:
+                                    info[self.basic_qstr] = ip_name.json()
+                                    rapiddns_res_log = json.dumps(info,indent=3) 
+                                    rapiddns_log_write.write(rapiddns_res_log)
+                                self.notice_print.emit("<font color='#55ff00'>" + ">Rapiddns日志存储完成" + "<font>")
+                            except Exception:
+                                pass
+                        
+                except Exception:
+                    pass
+            elif "ips=" in self.basic_qstr:
+                try:
+                    ip_name = requests.get(url='https://rapiddns.io/api/v1/'+ self.basic_qstr.split('=')[1] +'?size=100&page=1&t=1',headers=self.headers)
+                    if ip_name.json()['total'] == 0:
+                        pass
+                    else:
+                        rapiddns_res = {}
+                        rapiddns_res[self.basic_qstr] = ip_name.json()
+                        rapiddns_res_log_new = json.dumps(rapiddns_res,indent=3)
+                        for i in ip_name.json()['data']:
+                            httpurl = '<a href=\"http://' + str(i['name']) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(i['name'])  + '</span></a>'
+                            self.text_print.emit("<font color='#55ff00'>" + "[+]"+ i['name'] +','+ 'http' +',' +'title: None'+ "<font>")
+                        self.notice_print.emit("<font color='#55ff00'>" + ">Rapiddns查询完成" + "<font>")
+                        if self.log_time > 30:
+                            try:
+                                os.remove('./temp/rapiddns_search.log')
+                                with open('./temp/rapiddns_search.log','w+',encoding='utf8') as rapiddns_log_write:
+                                    rapiddns_log_write.write(rapiddns_res_log_new)
+                                self.notice_print.emit("<font color='#55ff00'>" + ">Rapiddns日志清除完成" + "<font>")
+                            except Exception:
+                                pass
+                        else:
+                            try:
+                                with open('./temp/rapiddns_search.log','w',encoding='utf8') as rapiddns_log_write:
+                                    info[self.basic_qstr] = ip_name.json()
+                                    rapiddns_res_log = json.dumps(info,indent=3) 
+                                    rapiddns_log_write.write(rapiddns_res_log)
+                                self.notice_print.emit("<font color='#55ff00'>" + ">Rapiddns日志存储完成" + "<font>")
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
+            elif "domain=" in self.basic_qstr:
+                try:                   
+                    ip_name = requests.get(url='https://rapiddns.io/api/v1/'+ self.basic_qstr.split('=')[1] +'?size=100&page=1&t=0',headers=self.headers)
+                    if ip_name.json()['total'] == 0:
+                        pass
+                    else:
+                        rapiddns_res = {}
+                        rapiddns_res[self.basic_qstr] = ip_name.json()
+                        rapiddns_res_log_new = json.dumps(rapiddns_res,indent=3)
+                        for i in ip_name.json()['data']:
+                            httpurl = '<a href=\"http://' + str(i['name']) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(i['name'])  + '</span></a>'
+                            self.text_print.emit("<font color='#55ff00'>" + "[+]"+ i['name'] +','+ 'http' +',' +'title: None'+ "<font>")
+                        self.notice_print.emit("<font color='#55ff00'>" + ">Rapiddns查询完成" + "<font>")
+                        if self.log_time > 30:
+                            try:
+                                os.remove('./temp/rapiddns_search.log')
+                                with open('./temp/rapiddns_search.log','w+',encoding='utf8') as rapiddns_log_write:
+                                    rapiddns_log_write.write(rapiddns_res_log_new)
+                                self.notice_print.emit("<font color='#55ff00'>" + ">Rapiddns日志清除完成" + "<font>")
+                            except Exception:
+                                pass
+                        else:
+                            try:
+                                with open('./temp/rapiddns_search.log','w',encoding='utf8') as rapiddns_log_write:
+                                    info[self.basic_qstr] = ip_name.json()
+                                    rapiddns_res_log = json.dumps(info,indent=3) 
+                                    rapiddns_log_write.write(rapiddns_res_log)
+                                self.notice_print.emit("<font color='#55ff00'>" + ">Rapiddns日志存储完成" + "<font>")
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
+            else:
+                pass
+
+
+    
 
 class get_proxy_list(QThread):
     text_print = pyqtSignal(str)

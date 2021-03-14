@@ -1,0 +1,17 @@
+{
+    "app=泛微协同办公OA": {
+        "fofa": "app=\"泛微-协同办公OA\"",
+        "zoomeye": "app:\"泛微 协同办公OA\"",
+        "quake": "app:\"泛微协同办公OA\""
+    },
+	"app=泛微云桥": {
+        "fofa": "app=\"泛微-云桥e-Bridge\"",
+        "zoomeye": "app:\"泛微云桥\"",
+        "quake": "app:\"泛微-云桥e-Bridge\""
+    },
+	"app=锐捷EG易网关": {
+        "fofa": "body=\"锐捷在线客服\"",
+        "zoomeye": "锐捷在线客服",
+        "quake": "app:\"锐捷-EG易网关\""
+    }
+}

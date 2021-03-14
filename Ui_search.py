@@ -239,7 +239,7 @@ class Ui_allsearch(object):
 
     def retranslateUi(self, allsearch):
         _translate = QtCore.QCoreApplication.translate
-        allsearch.setWindowTitle(_translate("allsearch", "Search Tools V1.5.1"))
+        allsearch.setWindowTitle(_translate("allsearch", "Search Tools V1.5.2"))
         self.start_search_pushButton.setText(_translate("allsearch", "开始搜索"))
         self.start_keywords_lineEdit.setPlaceholderText(_translate("allsearch", "ip=10.20.30.1|ips=10.20.30.1/24"))
         self.proxy_checkBox.setText(_translate("allsearch", "代理"))
