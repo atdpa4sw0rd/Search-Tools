@@ -1,0 +1,15 @@
+<RCC>
+  <qresource prefix="/">
+	<file>img/false.png</file>
+	<file>img/true.png</file>
+	<file>img/black_kai.png</file>
+	<file>img/black_guan.png</file>
+	<file>img/0n.png</file>
+	<file>img/0ff.png</file>
+	<file>img/search.png</file>
+	<file>img/spider.png</file>
+	<file>img/111.png</file>
+	<file>img/112.png</file>
+	<file>img/113.png</file>
+  </qresource>
+</RCC>

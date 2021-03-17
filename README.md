@@ -9,6 +9,16 @@
 
 **Fofa,Zoomeye,Quake,Shodan,Censys,BinaryEdge**
 
+## 1.5.3更新说明
+```
+1.增加搜索引擎开关
+2.修复延迟6秒整理信息（如果没有整理可在查询一次）
+3.添加小图标
+4.增加结果自动保存到result文件夹下excel
+5.修复线程冲突问题
+
+```
+
 ## 1.5.2更新说明
 ```
 1.增加自定义app规则(Fofa,Zoomeye,Quake支持app)
@@ -51,7 +61,7 @@
         "zoomeye": "app:\"泛微云桥\"",
         "quake": "app:\"泛微-云桥e-Bridge\""
     },
-	"app=锐捷EG易网关": {
+    "app=锐捷EG易网关": {
         "fofa": "body=\"锐捷在线客服\"",
         "zoomeye": "锐捷在线客服",
         "quake": "app:\"锐捷-EG易网关\""
@@ -106,6 +116,8 @@ ips=10.20.30.1/24^^protocol=https
 ```
 
 ![image](https://gitee.com/atdpa4sw0rd/Search-Tools/blob/main/search_tools.jpg)
+![image](https://gitee.com/atdpa4sw0rd/Search-Tools/blob/main/search_main.jpg)
+![image](https://gitee.com/atdpa4sw0rd/Search-Tools/blob/main/15a65458-5a94-4302-8bc6-66a82310e9f7.gif)
 
 
 
@@ -133,6 +145,10 @@ ips=10.20.30.1/24^^protocol=https
     │  ├─items #存储输入框提示符
     │  ├─proxylist #存储存活代理IP
     │  └─proxylist_unalive #存储非存活代理IP
+    ├─result
+    │  └─xxxxxxxx.xls #搜索结果
+    ├─img
+    │  └─*.png #小图标
     │
     └─icon
         └─xxx.ico # 存储Quake下载的ICO图标

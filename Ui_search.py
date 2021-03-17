@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'd:\python\search_tools\search_tools\search.ui'
+# Form implementation generated from reading ui file 'd:\python\search_tools\search_tools_test\search.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.1
 #
@@ -9,19 +9,20 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+import check_status
 
 class Ui_allsearch(object):
     def setupUi(self, allsearch):
         allsearch.setObjectName("allsearch")
-        allsearch.resize(889, 808)
+        allsearch.setEnabled(True)
+        allsearch.resize(969, 891)
         allsearch.setAutoFillBackground(False)
         allsearch.setStyleSheet("")
         allsearch.setDockOptions(QtWidgets.QMainWindow.AllowTabbedDocks|QtWidgets.QMainWindow.AnimatedDocks)
         self.centralwidget = QtWidgets.QWidget(allsearch)
         self.centralwidget.setObjectName("centralwidget")
-        self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.centralwidget)
-        self.verticalLayout_6.setObjectName("verticalLayout_6")
+        self.verticalLayout_8 = QtWidgets.QVBoxLayout(self.centralwidget)
+        self.verticalLayout_8.setObjectName("verticalLayout_8")
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.start_search_pushButton = QtWidgets.QPushButton(self.centralwidget)
@@ -40,6 +41,10 @@ class Ui_allsearch(object):
 "    /*上内边距为3像素，让按下时字向下移动3像素*/  \n"
 "    padding-top:3px;\n"
 "}")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/img/search.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.start_search_pushButton.setIcon(icon)
+        self.start_search_pushButton.setIconSize(QtCore.QSize(43, 21))
         self.start_search_pushButton.setObjectName("start_search_pushButton")
         self.horizontalLayout.addWidget(self.start_search_pushButton)
         self.start_keywords_lineEdit = QtWidgets.QLineEdit(self.centralwidget)
@@ -56,6 +61,18 @@ class Ui_allsearch(object):
         self.start_keywords_lineEdit.setObjectName("start_keywords_lineEdit")
         self.horizontalLayout.addWidget(self.start_keywords_lineEdit)
         self.proxy_checkBox = QtWidgets.QCheckBox(self.centralwidget)
+        self.proxy_checkBox.setStyleSheet("QCheckBox::indicator { \n"
+"    width: 50px;\n"
+"    height: 20px;\n"
+"}\n"
+"/*未选中*/\n"
+"QCheckBox::indicator::unchecked {   \n"
+"    image: url(:/img/false.png);\n"
+"}\n"
+"/*选中*/\n"
+"QCheckBox::indicator::checked { \n"
+"    image: url(:/img/true.png);\n"
+"}")
         self.proxy_checkBox.setObjectName("proxy_checkBox")
         self.horizontalLayout.addWidget(self.proxy_checkBox)
         self.start_time_spinBox = QtWidgets.QSpinBox(self.centralwidget)
@@ -66,17 +83,19 @@ class Ui_allsearch(object):
         self.start_time_spinBox.setObjectName("start_time_spinBox")
         self.horizontalLayout.addWidget(self.start_time_spinBox)
         self.proxy_test_pushButton = QtWidgets.QPushButton(self.centralwidget)
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/img/spider.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.proxy_test_pushButton.setIcon(icon1)
         self.proxy_test_pushButton.setObjectName("proxy_test_pushButton")
         self.horizontalLayout.addWidget(self.proxy_test_pushButton)
-        self.verticalLayout_6.addLayout(self.horizontalLayout)
-        self.gridLayout_2 = QtWidgets.QGridLayout()
-        self.gridLayout_2.setSpacing(0)
-        self.gridLayout_2.setObjectName("gridLayout_2")
+        self.verticalLayout_8.addLayout(self.horizontalLayout)
+        self.horizontalLayout_9 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_9.setObjectName("horizontalLayout_9")
         self.verticalLayout_11 = QtWidgets.QVBoxLayout()
         self.verticalLayout_11.setSpacing(0)
         self.verticalLayout_11.setObjectName("verticalLayout_11")
         self.notice_groupBox = QtWidgets.QGroupBox(self.centralwidget)
-        self.notice_groupBox.setMaximumSize(QtCore.QSize(210, 16777215))
+        self.notice_groupBox.setMaximumSize(QtCore.QSize(199, 16777215))
         self.notice_groupBox.setObjectName("notice_groupBox")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.notice_groupBox)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
@@ -112,9 +131,8 @@ class Ui_allsearch(object):
         self.count_output_textBrowser.setObjectName("count_output_textBrowser")
         self.verticalLayout.addWidget(self.count_output_textBrowser)
         self.verticalLayout_11.addWidget(self.notice_groupBox)
-        self.gridLayout_2.addLayout(self.verticalLayout_11, 0, 0, 1, 1)
+        self.horizontalLayout_9.addLayout(self.verticalLayout_11)
         self.gridLayout = QtWidgets.QGridLayout()
-        self.gridLayout.setSpacing(0)
         self.gridLayout.setObjectName("gridLayout")
         self.final_result_groupBox = QtWidgets.QGroupBox(self.centralwidget)
         self.final_result_groupBox.setStyleSheet("")
@@ -131,29 +149,92 @@ class Ui_allsearch(object):
         self.final_result_search_output_textBrowser.setOpenExternalLinks(True)
         self.final_result_search_output_textBrowser.setObjectName("final_result_search_output_textBrowser")
         self.horizontalLayout_2.addWidget(self.final_result_search_output_textBrowser)
-        self.gridLayout.addWidget(self.final_result_groupBox, 0, 0, 3, 2)
-        self.fofa_groupBox = QtWidgets.QGroupBox(self.centralwidget)
-        self.fofa_groupBox.setObjectName("fofa_groupBox")
-        self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.fofa_groupBox)
-        self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_5.setSpacing(0)
-        self.verticalLayout_5.setObjectName("verticalLayout_5")
-        self.fofa_search_output_textBrowser = QtWidgets.QTextBrowser(self.fofa_groupBox)
+        self.gridLayout.addWidget(self.final_result_groupBox, 0, 0, 2, 2)
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_3.setObjectName("verticalLayout_3")
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.fofa_label = QtWidgets.QLabel(self.centralwidget)
+        self.fofa_label.setObjectName("fofa_label")
+        self.horizontalLayout_3.addWidget(self.fofa_label)
+        self.fofa_checkBox = QtWidgets.QCheckBox(self.centralwidget)
+        self.fofa_checkBox.setEnabled(True)
+        self.fofa_checkBox.setStyleSheet("QCheckBox::indicator { \n"
+"    width: 50px;\n"
+"    height: 20px;\n"
+"}\n"
+"/*未选中*/\n"
+"QCheckBox::indicator::unchecked {   \n"
+"    image: url(:/img/false.png);\n"
+"}\n"
+"/*选中*/\n"
+"QCheckBox::indicator::checked { \n"
+"    image: url(:/img/true.png);\n"
+"}")
+        self.fofa_checkBox.setText("")
+        self.fofa_checkBox.setObjectName("fofa_checkBox")
+        self.horizontalLayout_3.addWidget(self.fofa_checkBox)
+        self.fofa_size_lineEdit = QtWidgets.QLineEdit(self.centralwidget)
+        self.fofa_size_lineEdit.setMaximumSize(QtCore.QSize(109, 16777215))
+        self.fofa_size_lineEdit.setStyleSheet("QLineEdit{\n"
+"\n"
+"border:1px solid gray;\n"
+"\n"
+"width:51px;\n"
+"\n"
+"border-radius:10px;\n"
+"\n"
+"padding:2px 4px;}")
+        self.fofa_size_lineEdit.setObjectName("fofa_size_lineEdit")
+        self.horizontalLayout_3.addWidget(self.fofa_size_lineEdit)
+        self.verticalLayout_3.addLayout(self.horizontalLayout_3)
+        self.fofa_search_output_textBrowser = QtWidgets.QTextBrowser(self.centralwidget)
         self.fofa_search_output_textBrowser.setMinimumSize(QtCore.QSize(190, 158))
         self.fofa_search_output_textBrowser.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.fofa_search_output_textBrowser.setStyleSheet("background-color: paleteGreen;\n"
 "border-radius:15px")
         self.fofa_search_output_textBrowser.setOpenExternalLinks(True)
         self.fofa_search_output_textBrowser.setObjectName("fofa_search_output_textBrowser")
-        self.verticalLayout_5.addWidget(self.fofa_search_output_textBrowser)
-        self.gridLayout.addWidget(self.fofa_groupBox, 0, 2, 1, 1)
-        self.zoomeye_groupBox = QtWidgets.QGroupBox(self.centralwidget)
-        self.zoomeye_groupBox.setObjectName("zoomeye_groupBox")
-        self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.zoomeye_groupBox)
-        self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_4.setSpacing(0)
+        self.verticalLayout_3.addWidget(self.fofa_search_output_textBrowser)
+        self.verticalLayout_4 = QtWidgets.QVBoxLayout()
         self.verticalLayout_4.setObjectName("verticalLayout_4")
-        self.zoomeye_search_output_textBrowser = QtWidgets.QTextBrowser(self.zoomeye_groupBox)
+        self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
+        self.zoomeye_label = QtWidgets.QLabel(self.centralwidget)
+        self.zoomeye_label.setObjectName("zoomeye_label")
+        self.horizontalLayout_4.addWidget(self.zoomeye_label)
+        self.zoomeye_checkBox = QtWidgets.QCheckBox(self.centralwidget)
+        self.zoomeye_checkBox.setEnabled(True)
+        self.zoomeye_checkBox.setStyleSheet("QCheckBox::indicator { \n"
+"    width: 50px;\n"
+"    height: 20px;\n"
+"}\n"
+"/*未选中*/\n"
+"QCheckBox::indicator::unchecked {   \n"
+"    image: url(:/img/false.png);\n"
+"}\n"
+"/*选中*/\n"
+"QCheckBox::indicator::checked { \n"
+"    image: url(:/img/true.png);\n"
+"}")
+        self.zoomeye_checkBox.setText("")
+        self.zoomeye_checkBox.setObjectName("zoomeye_checkBox")
+        self.horizontalLayout_4.addWidget(self.zoomeye_checkBox)
+        self.zoomeye_size_lineEdit = QtWidgets.QLineEdit(self.centralwidget)
+        self.zoomeye_size_lineEdit.setEnabled(False)
+        self.zoomeye_size_lineEdit.setStyleSheet("QLineEdit{\n"
+"\n"
+"border:1px solid gray;\n"
+"\n"
+"width:51px;\n"
+"\n"
+"border-radius:10px;\n"
+"\n"
+"padding:2px 4px;}")
+        self.zoomeye_size_lineEdit.setObjectName("zoomeye_size_lineEdit")
+        self.horizontalLayout_4.addWidget(self.zoomeye_size_lineEdit)
+        self.verticalLayout_4.addLayout(self.horizontalLayout_4)
+        self.zoomeye_search_output_textBrowser = QtWidgets.QTextBrowser(self.centralwidget)
         self.zoomeye_search_output_textBrowser.setMinimumSize(QtCore.QSize(190, 158))
         self.zoomeye_search_output_textBrowser.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.zoomeye_search_output_textBrowser.setStyleSheet("background-color: paleteGreen;\n"
@@ -161,69 +242,195 @@ class Ui_allsearch(object):
         self.zoomeye_search_output_textBrowser.setOpenExternalLinks(True)
         self.zoomeye_search_output_textBrowser.setObjectName("zoomeye_search_output_textBrowser")
         self.verticalLayout_4.addWidget(self.zoomeye_search_output_textBrowser)
-        self.gridLayout.addWidget(self.zoomeye_groupBox, 1, 2, 1, 1)
-        self.quake_groupBox = QtWidgets.QGroupBox(self.centralwidget)
-        self.quake_groupBox.setObjectName("quake_groupBox")
-        self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.quake_groupBox)
-        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_3.setSpacing(0)
-        self.verticalLayout_3.setObjectName("verticalLayout_3")
-        self.quake_search_output_textBrowser = QtWidgets.QTextBrowser(self.quake_groupBox)
+        self.verticalLayout_3.addLayout(self.verticalLayout_4)
+        self.gridLayout.addLayout(self.verticalLayout_3, 0, 2, 1, 1)
+        self.verticalLayout_5 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_5.setObjectName("verticalLayout_5")
+        self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_5.setObjectName("horizontalLayout_5")
+        self.quake_label = QtWidgets.QLabel(self.centralwidget)
+        self.quake_label.setObjectName("quake_label")
+        self.horizontalLayout_5.addWidget(self.quake_label)
+        self.quake_checkBox = QtWidgets.QCheckBox(self.centralwidget)
+        self.quake_checkBox.setEnabled(True)
+        self.quake_checkBox.setStyleSheet("QCheckBox::indicator { \n"
+"    width: 50px;\n"
+"    height: 20px;\n"
+"}\n"
+"/*未选中*/\n"
+"QCheckBox::indicator::unchecked {   \n"
+"    image: url(:/img/false.png);\n"
+"}\n"
+"/*选中*/\n"
+"QCheckBox::indicator::checked { \n"
+"    image: url(:/img/true.png);\n"
+"}")
+        self.quake_checkBox.setText("")
+        self.quake_checkBox.setObjectName("quake_checkBox")
+        self.horizontalLayout_5.addWidget(self.quake_checkBox)
+        self.quake_size_lineEdit = QtWidgets.QLineEdit(self.centralwidget)
+        self.quake_size_lineEdit.setStyleSheet("QLineEdit{\n"
+"\n"
+"border:1px solid gray;\n"
+"\n"
+"width:51px;\n"
+"\n"
+"border-radius:10px;\n"
+"\n"
+"padding:2px 4px;}")
+        self.quake_size_lineEdit.setObjectName("quake_size_lineEdit")
+        self.horizontalLayout_5.addWidget(self.quake_size_lineEdit)
+        self.verticalLayout_5.addLayout(self.horizontalLayout_5)
+        self.quake_search_output_textBrowser = QtWidgets.QTextBrowser(self.centralwidget)
         self.quake_search_output_textBrowser.setMinimumSize(QtCore.QSize(190, 158))
         self.quake_search_output_textBrowser.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.quake_search_output_textBrowser.setStyleSheet("background-color: paleteGreen;\n"
 "border-radius:15px")
         self.quake_search_output_textBrowser.setOpenExternalLinks(True)
         self.quake_search_output_textBrowser.setObjectName("quake_search_output_textBrowser")
-        self.verticalLayout_3.addWidget(self.quake_search_output_textBrowser)
-        self.gridLayout.addWidget(self.quake_groupBox, 2, 2, 1, 1)
-        self.shodan_groupBox = QtWidgets.QGroupBox(self.centralwidget)
-        self.shodan_groupBox.setObjectName("shodan_groupBox")
-        self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.shodan_groupBox)
-        self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
-        self.horizontalLayout_3.setSpacing(0)
-        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
-        self.shodan_search_output_textBrowser = QtWidgets.QTextBrowser(self.shodan_groupBox)
+        self.verticalLayout_5.addWidget(self.quake_search_output_textBrowser)
+        self.gridLayout.addLayout(self.verticalLayout_5, 1, 2, 1, 1)
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.horizontalLayout_6 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_6.setObjectName("horizontalLayout_6")
+        self.shodan_label = QtWidgets.QLabel(self.centralwidget)
+        self.shodan_label.setObjectName("shodan_label")
+        self.horizontalLayout_6.addWidget(self.shodan_label)
+        self.shodan_checkBox = QtWidgets.QCheckBox(self.centralwidget)
+        self.shodan_checkBox.setEnabled(True)
+        self.shodan_checkBox.setStyleSheet("QCheckBox::indicator { \n"
+"    width: 50px;\n"
+"    height: 20px;\n"
+"}\n"
+"/*未选中*/\n"
+"QCheckBox::indicator::unchecked {   \n"
+"    image: url(:/img/false.png);\n"
+"}\n"
+"/*选中*/\n"
+"QCheckBox::indicator::checked { \n"
+"    image: url(:/img/true.png);\n"
+"}")
+        self.shodan_checkBox.setText("")
+        self.shodan_checkBox.setObjectName("shodan_checkBox")
+        self.horizontalLayout_6.addWidget(self.shodan_checkBox)
+        self.shodan_size_lineEdit = QtWidgets.QLineEdit(self.centralwidget)
+        self.shodan_size_lineEdit.setEnabled(False)
+        self.shodan_size_lineEdit.setStyleSheet("QLineEdit{\n"
+"\n"
+"border:1px solid gray;\n"
+"\n"
+"width:51px;\n"
+"\n"
+"border-radius:10px;\n"
+"\n"
+"padding:2px 4px;}")
+        self.shodan_size_lineEdit.setObjectName("shodan_size_lineEdit")
+        self.horizontalLayout_6.addWidget(self.shodan_size_lineEdit)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_6)
+        self.shodan_search_output_textBrowser = QtWidgets.QTextBrowser(self.centralwidget)
         self.shodan_search_output_textBrowser.setMinimumSize(QtCore.QSize(167, 158))
         self.shodan_search_output_textBrowser.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.shodan_search_output_textBrowser.setStyleSheet("background-color: paleteGreen;\n"
 "border-radius:15px")
         self.shodan_search_output_textBrowser.setOpenExternalLinks(True)
         self.shodan_search_output_textBrowser.setObjectName("shodan_search_output_textBrowser")
-        self.horizontalLayout_3.addWidget(self.shodan_search_output_textBrowser)
-        self.gridLayout.addWidget(self.shodan_groupBox, 3, 0, 1, 1)
-        self.censys_groupBox = QtWidgets.QGroupBox(self.centralwidget)
-        self.censys_groupBox.setObjectName("censys_groupBox")
-        self.horizontalLayout_5 = QtWidgets.QHBoxLayout(self.censys_groupBox)
-        self.horizontalLayout_5.setContentsMargins(0, 0, 0, 0)
-        self.horizontalLayout_5.setSpacing(0)
-        self.horizontalLayout_5.setObjectName("horizontalLayout_5")
-        self.censys_search_output_textBrowser = QtWidgets.QTextBrowser(self.censys_groupBox)
+        self.verticalLayout_2.addWidget(self.shodan_search_output_textBrowser)
+        self.gridLayout.addLayout(self.verticalLayout_2, 2, 0, 1, 1)
+        self.verticalLayout_7 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_7.setObjectName("verticalLayout_7")
+        self.horizontalLayout_7 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_7.setObjectName("horizontalLayout_7")
+        self.censys_label = QtWidgets.QLabel(self.centralwidget)
+        self.censys_label.setObjectName("censys_label")
+        self.horizontalLayout_7.addWidget(self.censys_label)
+        self.censys_checkBox = QtWidgets.QCheckBox(self.centralwidget)
+        self.censys_checkBox.setEnabled(True)
+        self.censys_checkBox.setStyleSheet("QCheckBox::indicator { \n"
+"    width: 50px;\n"
+"    height: 20px;\n"
+"}\n"
+"/*未选中*/\n"
+"QCheckBox::indicator::unchecked {   \n"
+"    image: url(:/img/false.png);\n"
+"}\n"
+"/*选中*/\n"
+"QCheckBox::indicator::checked { \n"
+"    image: url(:/img/true.png);\n"
+"}")
+        self.censys_checkBox.setText("")
+        self.censys_checkBox.setObjectName("censys_checkBox")
+        self.horizontalLayout_7.addWidget(self.censys_checkBox)
+        self.censys_size_lineEdit = QtWidgets.QLineEdit(self.centralwidget)
+        self.censys_size_lineEdit.setStyleSheet("QLineEdit{\n"
+"\n"
+"border:1px solid gray;\n"
+"\n"
+"width:51px;\n"
+"\n"
+"border-radius:10px;\n"
+"\n"
+"padding:2px 4px;}")
+        self.censys_size_lineEdit.setObjectName("censys_size_lineEdit")
+        self.horizontalLayout_7.addWidget(self.censys_size_lineEdit)
+        self.verticalLayout_7.addLayout(self.horizontalLayout_7)
+        self.censys_search_output_textBrowser = QtWidgets.QTextBrowser(self.centralwidget)
         self.censys_search_output_textBrowser.setMinimumSize(QtCore.QSize(167, 158))
         self.censys_search_output_textBrowser.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.censys_search_output_textBrowser.setStyleSheet("background-color: paleteGreen;\n"
 "border-radius:15px")
         self.censys_search_output_textBrowser.setOpenExternalLinks(True)
         self.censys_search_output_textBrowser.setObjectName("censys_search_output_textBrowser")
-        self.horizontalLayout_5.addWidget(self.censys_search_output_textBrowser)
-        self.gridLayout.addWidget(self.censys_groupBox, 3, 1, 1, 1)
-        self.binaryedge_groupBox = QtWidgets.QGroupBox(self.centralwidget)
-        self.binaryedge_groupBox.setObjectName("binaryedge_groupBox")
-        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.binaryedge_groupBox)
-        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_2.setSpacing(0)
-        self.verticalLayout_2.setObjectName("verticalLayout_2")
-        self.binaryedge_search_output_textBrowser = QtWidgets.QTextBrowser(self.binaryedge_groupBox)
+        self.verticalLayout_7.addWidget(self.censys_search_output_textBrowser)
+        self.gridLayout.addLayout(self.verticalLayout_7, 2, 1, 1, 1)
+        self.verticalLayout_6 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_6.setObjectName("verticalLayout_6")
+        self.horizontalLayout_8 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_8.setObjectName("horizontalLayout_8")
+        self.binaryedge_label = QtWidgets.QLabel(self.centralwidget)
+        self.binaryedge_label.setObjectName("binaryedge_label")
+        self.horizontalLayout_8.addWidget(self.binaryedge_label)
+        self.binaryedge_checkBox = QtWidgets.QCheckBox(self.centralwidget)
+        self.binaryedge_checkBox.setEnabled(True)
+        self.binaryedge_checkBox.setStyleSheet("QCheckBox::indicator { \n"
+"    width: 50px;\n"
+"    height: 20px;\n"
+"}\n"
+"/*未选中*/\n"
+"QCheckBox::indicator::unchecked {   \n"
+"    image: url(:/img/false.png);\n"
+"}\n"
+"/*选中*/\n"
+"QCheckBox::indicator::checked { \n"
+"    image: url(:/img/true.png);\n"
+"}")
+        self.binaryedge_checkBox.setText("")
+        self.binaryedge_checkBox.setObjectName("binaryedge_checkBox")
+        self.horizontalLayout_8.addWidget(self.binaryedge_checkBox)
+        self.binaryedge_size_lineEdit = QtWidgets.QLineEdit(self.centralwidget)
+        self.binaryedge_size_lineEdit.setStyleSheet("QLineEdit{\n"
+"\n"
+"border:1px solid gray;\n"
+"\n"
+"width:51px;\n"
+"\n"
+"border-radius:10px;\n"
+"\n"
+"padding:2px 4px;}")
+        self.binaryedge_size_lineEdit.setObjectName("binaryedge_size_lineEdit")
+        self.horizontalLayout_8.addWidget(self.binaryedge_size_lineEdit)
+        self.verticalLayout_6.addLayout(self.horizontalLayout_8)
+        self.binaryedge_search_output_textBrowser = QtWidgets.QTextBrowser(self.centralwidget)
         self.binaryedge_search_output_textBrowser.setMinimumSize(QtCore.QSize(190, 158))
         self.binaryedge_search_output_textBrowser.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.binaryedge_search_output_textBrowser.setStyleSheet("background-color: paleteGreen;\n"
 "border-radius:15px")
         self.binaryedge_search_output_textBrowser.setOpenExternalLinks(True)
         self.binaryedge_search_output_textBrowser.setObjectName("binaryedge_search_output_textBrowser")
-        self.verticalLayout_2.addWidget(self.binaryedge_search_output_textBrowser)
-        self.gridLayout.addWidget(self.binaryedge_groupBox, 3, 2, 1, 1)
-        self.gridLayout_2.addLayout(self.gridLayout, 0, 1, 1, 1)
-        self.verticalLayout_6.addLayout(self.gridLayout_2)
+        self.verticalLayout_6.addWidget(self.binaryedge_search_output_textBrowser)
+        self.gridLayout.addLayout(self.verticalLayout_6, 2, 2, 1, 1)
+        self.horizontalLayout_9.addLayout(self.gridLayout)
+        self.verticalLayout_8.addLayout(self.horizontalLayout_9)
         allsearch.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(allsearch)
         self.statusbar.setObjectName("statusbar")
@@ -239,12 +446,12 @@ class Ui_allsearch(object):
 
     def retranslateUi(self, allsearch):
         _translate = QtCore.QCoreApplication.translate
-        allsearch.setWindowTitle(_translate("allsearch", "Search Tools V1.5.2"))
-        self.start_search_pushButton.setText(_translate("allsearch", "开始搜索"))
+        allsearch.setWindowTitle(_translate("allsearch", "Search Tools V1.5.3"))
+        self.start_search_pushButton.setText(_translate("allsearch", "搜索"))
         self.start_keywords_lineEdit.setPlaceholderText(_translate("allsearch", "ip=10.20.30.1|ips=10.20.30.1/24"))
         self.proxy_checkBox.setText(_translate("allsearch", "代理"))
         self.start_time_spinBox.setSuffix(_translate("allsearch", "天"))
-        self.proxy_test_pushButton.setText(_translate("allsearch", "验证代理"))
+        self.proxy_test_pushButton.setText(_translate("allsearch", "爬取代理"))
         self.notice_groupBox.setTitle(_translate("allsearch", "提示信息：↓"))
         self.label.setText(_translate("allsearch", "代理信息：↓"))
         self.proxy_output_textBrowser.setHtml(_translate("allsearch", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
@@ -254,16 +461,23 @@ class Ui_allsearch(object):
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'&quot;华文细黑&quot;\'; font-size:14pt;\"><br /></p></body></html>"))
         self.count_label.setText(_translate("allsearch", "统计信息：↓"))
         self.final_result_groupBox.setTitle(_translate("allsearch", "Final Result："))
-        self.fofa_groupBox.setTitle(_translate("allsearch", "Fofa："))
-        self.zoomeye_groupBox.setTitle(_translate("allsearch", "Zoomeye："))
-        self.quake_groupBox.setTitle(_translate("allsearch", "Quake："))
-        self.shodan_groupBox.setTitle(_translate("allsearch", "Shodan："))
+        self.fofa_label.setText(_translate("allsearch", "Fofa:"))
+        self.fofa_size_lineEdit.setText(_translate("allsearch", "100"))
+        self.zoomeye_label.setText(_translate("allsearch", "Zoomeye:"))
+        self.zoomeye_size_lineEdit.setText(_translate("allsearch", "20"))
+        self.quake_label.setText(_translate("allsearch", "Quake:"))
+        self.quake_size_lineEdit.setText(_translate("allsearch", "10"))
+        self.shodan_label.setText(_translate("allsearch", "Shodan:"))
+        self.shodan_size_lineEdit.setText(_translate("allsearch", "100"))
         self.shodan_search_output_textBrowser.setHtml(_translate("allsearch", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'SimSun\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>"))
-        self.censys_groupBox.setTitle(_translate("allsearch", "Censys："))
-        self.binaryedge_groupBox.setTitle(_translate("allsearch", "Binaryedge："))
+        self.censys_label.setText(_translate("allsearch", "Censys:"))
+        self.censys_size_lineEdit.setText(_translate("allsearch", "10"))
+        self.binaryedge_label.setText(_translate("allsearch", "Binaryedge:"))
+        self.binaryedge_size_lineEdit.setText(_translate("allsearch", "100"))
         self.actionsss.setText(_translate("allsearch", "sss"))
         self.actionhelp.setText(_translate("allsearch", "help"))
+
