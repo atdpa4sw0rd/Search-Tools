@@ -1,32 +1,26 @@
 
 
 
-#Search-Tools [![License](https://img.shields.io/aur/license/yaourt.svg)](https://github.com/atdpa4sw0rd/Search-Tools/blob/main/LICENSE)
+#Search-Tools [![License](https://img.shields.io/aur/license/yaourt.svg)](https://github.com/atdpa4sw0rd/Search-Tools/blob/main/LICENSE)[![GitHub stars](https://img.shields.io/github/stars/atdpa4sw0rd/Search-Tools)](https://github.com/atdpa4sw0rd/Search-Tools)
 ----------
 
 **Search-Tools**
 **集合比较常见的网络空间探测引擎**
 
-**Fofa,Zoomeye,Quake,Shodan,Censys,BinaryEdge**
+**Fofa,Zoomeye,Quake,Shodan,Censys,BinaryEdge,threatbook**
 
-## 1.5.3更新说明
-```
-1.增加搜索引擎开关
-2.修复延迟6秒整理信息（如果没有整理可在查询一次）
-3.添加小图标
-4.增加结果自动保存到result文件夹下excel
-5.修复线程冲突问题
+**HW蓝队情报收集**
 
+## 1.5.4更新说明
 ```
-
-## 1.5.2更新说明
+1.增加微步威胁情报
+2.微步威胁情报日志存档
+3.增加IP逆地址解析(GCJ-02坐标，然而并无卵用，后续会更换)
+4.增加目标IP地图展示
+注：需要配置微步API和百度地图API,在config.ini填写；
+    有木有白嫖的情报源，告知一下谢谢
 ```
-1.增加自定义app规则(Fofa,Zoomeye,Quake支持app)
-2.修复整合数据问题
-3.增加Rapiddns域名反查、IP反查询
-4.增加自定义输入框提示
-
-```
+![image](https://github.com/atdpa4sw0rd/Search-Tools/blob/main/ip_location.gif)
 
 
 ## 简单说明
@@ -115,9 +109,9 @@ ips=10.20.30.1/24^^protocol=https
 
 ```
 
-![image](https://gitee.com/atdpa4sw0rd/Search-Tools/blob/main/search_tools.jpg)
-![image](https://gitee.com/atdpa4sw0rd/Search-Tools/blob/main/search_main.jpg)
-![image](https://gitee.com/atdpa4sw0rd/Search-Tools/blob/main/15a65458-5a94-4302-8bc6-66a82310e9f7.gif)
+![image](https://github.com/atdpa4sw0rd/Search-Tools/blob/main/search_tools.jpg)
+![image](https://github.com/atdpa4sw0rd/Search-Tools/blob/main/search_main.jpg)
+![image](https://github.com/atdpa4sw0rd/Search-Tools/blob/main/15a65458-5a94-4302-8bc6-66a82310e9f7.gif)
 
 
 
@@ -152,3 +146,23 @@ ips=10.20.30.1/24^^protocol=https
     │
     └─icon
         └─xxx.ico # 存储Quake下载的ICO图标
+
+## 1.5.3更新说明
+```
+1.增加搜索引擎开关
+2.修复延迟6秒整理信息（如果没有整理可在查询一次）
+3.添加小图标
+4.增加结果自动保存到result文件夹下excel
+5.修复线程冲突问题
+
+```
+
+## 1.5.2更新说明
+```
+1.增加自定义app规则(Fofa,Zoomeye,Quake支持app)
+2.修复整合数据问题
+3.增加Rapiddns域名反查、IP反查询
+4.增加自定义输入框提示
+
+```
+

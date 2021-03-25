@@ -1,7 +1,10 @@
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QMessageBox,QTableWidget,QTableWidgetItem,QCompleter
-from PyQt5.QtCore import pyqtSignal, QObject, QThread,QFileInfo,QRegExp,QUrl,Qt
+from PyQt5.QtWidgets import QMessageBox,QTableWidget,QTableWidgetItem,QCompleter,QWidget,QVBoxLayout
+from PyQt5.QtCore import pyqtSignal, QObject, QThread,QFileInfo,QRegExp,QUrl,Qt,QTimer
+from PyQt5.QtWebEngineWidgets import QWebEngineView
 from Ui_search import Ui_allsearch
+from Ui_targetinfo import Ui_Form
+from ipwhois import IPWhois
 from bs4 import BeautifulSoup
 import items
 import favicon
@@ -10,7 +13,7 @@ from threading import Thread
 from urllib.parse import quote
 from dateutil.parser import parse
 from USER_AGENTS import USER_AGENTS
-import re,sys,os,json,datetime,base64,requests,shodan,mmh3,random,xlwt
+import re,sys,os,json,datetime,base64,requests,shodan,mmh3,random,xlwt,codecs,hashlib
 import subprocess
 import time
 
@@ -23,6 +26,7 @@ class MyWindow(QtWidgets.QMainWindow, Ui_allsearch):
 
         self.start_search_pushButton.clicked.connect(self.start_searching)
         self.proxy_test_pushButton.clicked.connect(self.start_proxy)
+        self.loca_pushButton.clicked.connect(self.ip_location)
         self.statusBar().showMessage('by: mojie')
         self.init_start_keywords_lineEdit()
     
@@ -31,6 +35,15 @@ class MyWindow(QtWidgets.QMainWindow, Ui_allsearch):
         self.completer.setFilterMode(Qt.MatchStartsWith)
         self.completer.setCompletionMode(QCompleter.PopupCompletion)
         self.start_keywords_lineEdit.setCompleter(self.completer)
+    
+    def ip_location(self):
+        if 'ip=' in self.start_keywords_lineEdit.text():
+
+            hostinfo = self.start_keywords_lineEdit.text()
+            self.ip_l = ip_location(hostinfo)
+            self.ip_l.show()
+        else:
+            pass
 
     
     def fofa_key(self):
@@ -264,11 +277,12 @@ class MyWindow(QtWidgets.QMainWindow, Ui_allsearch):
         else:
             iconame = ['jpg','png','ico']
             filename = self.start_keywords_lineEdit.text().split('.')[-1]
-            if '//' in self.start_keywords_lineEdit.text() or filename in iconame:
+            if '://' in self.start_keywords_lineEdit.text() or filename in iconame:
+                log_time = self.filelog_time()
                 quake_icon = 'favicon: ' + '"' + str(self.quake_icon()) + '"'
                 fofa_icon = 'icon_hash=' + '"' + str(self.fofa_shodan_icon()) + '"'
                 shodan_icon = 'http.favicon.hash:' + str(self.fofa_shodan_icon())
-                self.fofa_thread = fofa_search_qthread(self.start_time_spinBox.text(),fofa_icon,self.fofa_key()[0][0],self.fofa_key()[1][0])
+                self.fofa_thread = fofa_search_qthread(self.start_time_spinBox.text(),fofa_icon,self.fofa_key()[0][0],self.fofa_key()[1][0],self.start_keywords_lineEdit.text(),log_time[0],proxy_flag,self.fofa_checkBox.isChecked(),self.fofa_size_lineEdit.text())
                 self.fofa_thread.text_print.connect(self.fofa_output)
                 self.fofa_thread.notice_print.connect(self.notice_output)
                 self.fofa_thread.count_print.connect(self.count_output)
@@ -276,13 +290,13 @@ class MyWindow(QtWidgets.QMainWindow, Ui_allsearch):
                 self.fofa_search_output_textBrowser.setText("<font color='#55ff00'>" + '==========================' + "<font>")
                 self.zoomeye_search_output_textBrowser.setText("<font color='#55ff00'>" + '==========================' + "<font>")
                 self.zoomeye_search_output_textBrowser.append("<font color='#ff0000'>" + '>Zoomeye不支持Icon查询' + "<font>")
-                self.quake_thread = quake_search_qthread(self.quake_key()[0],quake_icon)
+                self.quake_thread = quake_search_qthread(self.quake_key()[0],quake_icon,self.start_keywords_lineEdit.text(),log_time[2],proxy_flag,self.quake_checkBox.isChecked(),self.quake_size_lineEdit.text())
                 self.quake_thread.text_print.connect(self.quake_output)
                 self.quake_thread.notice_print.connect(self.notice_output)
                 self.quake_thread.count_print.connect(self.count_output)
                 self.quake_thread.res_print.connect(self.all_output)
                 self.quake_search_output_textBrowser.setText("<font color='#55ff00'>" + '==========================' + "<font>")
-                self.shodan_thread = shodan_search_qthread(self.shodan_key()[0],shodan_icon)
+                self.shodan_thread = shodan_search_qthread(self.shodan_key()[0],shodan_icon,self.start_keywords_lineEdit.text(),log_time[3],self.shodan_checkBox.isChecked(),self.shodan_size_lineEdit.text())
                 self.shodan_thread.text_print.connect(self.shodan_output)
                 self.shodan_thread.notice_print.connect(self.notice_output)
                 self.shodan_thread.count_print.connect(self.count_output)
@@ -696,6 +710,14 @@ class fofa_search_qthread(QThread):
                             self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + i[4] + "<font>")
                             self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
                             self.res_print.emit("<font color='#55ff00'>" +"[+]" + httpurl +","+ "http" +","+i[3]+ "<font>") 
+                        
+                        elif '://' in self.basic_qstr:
+                            httpurl = '<a href=\"http://' + str(i[1]) + ":" + str(i[2]) + '\"><span style=\" text-decoration: underline; color:#55ff00;\">' + str(i[1]) + ":" + str(i[2])  + '</span></a>'
+                            self.text_print.emit("<font color='#55ff00'>" + "Host: " + httpurl + "<font>")
+                            self.text_print.emit("<font color='#55ff00'>" + "Title: " + i[3] + "<font>")
+                            self.text_print.emit("<font color='#55ff00'>" + "Protocol: " + i[4] + "<font>")
+                            self.text_print.emit("<font color='#55ff00'>" + '==========================' + "<font>")
+                            self.res_print.emit("<font color='#55ff00'>" +"[+]" + httpurl +","+ "http" +","+i[3]+ "<font>")
 
                         else:  
                             self.text_print.emit("<font color='#55ff00'>" + "Host: " + i[1] + ":" + i[2] + "<font>")                       
@@ -725,7 +747,7 @@ class fofa_search_qthread(QThread):
                             t0 = time.time()
                             select_list = []  
                             api_url_http = 'http://fofa.so/api/v1/search/all?email=%s&key=%s&fields=host,ip,port,title,protocol,header,banner&size=%s&page=1&qbase64=%s'%(self.email,self.key,self.size,base64_qstr)              
-                            api_url_https = 'https://fofa.so/api/v1/search/all?email=%s&key=%s&fields=host,ip,port,title,protocol,header,banner&size=%s&page=1&qbase64=%s'%(self.email,self.key,self.size,base64_qstr)
+                            api_url_https = 'https://fofa.so/api/v1/search/all?email=%s&key=%s&fields=host,ip,port,title,protocol,header,banner,longitude,latitude&size=%s&page=1&qbase64=%s'%(self.email,self.key,self.size,base64_qstr)
                             if self.proxy_flag == 'start':
                                 with open('./temp/proxylist','r',encoding='utf8') as pt:
                                     pr = pt.readlines()
@@ -2365,6 +2387,316 @@ class get_proxy_list(QThread):
                         pass
             except Exception:
                 self.text_print.emit("<font color='#ff0000'>" + ">Fofa请求失败" + "<font>")
+
+
+class ip_location(QWidget,Ui_Form):
+    def __init__(self, a):
+        super(ip_location, self).__init__()
+        self.headers = {                     
+                        "User-Agent": random.choice(USER_AGENTS),
+        }
+        self.host = a.strip()
+        self.host_true = a.strip().split("=")[-1]
+        self.setupUi(self)
+        self.start()
+        # self.statusBar().showMessage('by: mojie')
+        
+        
+    
+    def start(self):
+        self.initUi()
+        self.start = threatbook(str(self.read_key()[1][0]),self.host,str(self.target_ip_localtion()[0]),str(self.target_ip_localtion()[1]),str(self.target_ip_localtion()[2]),str(self.ip_location()[0]),str(self.ip_location()[1]),str(self.read_key()[0][0]),self.target_ip_localtion()[2])
+        self.start.text_print.connect(self.text_print)
+        self.start.start()
+
+    def map_html(self):
+        with codecs.open("./ip_location/ip_location.html", "r", "utf-8") as f:
+            html = f.read()
+        point_all = re.findall('BMapGL.Point((.*),(.*));',html)
+        
+        start_point_lng = point_all[0][0].split(",")[0].replace('(','')
+        start_point_lat = point_all[0][0].split(",")[1].replace(')','')
+        end_point_lng = point_all[1][0].split(",")[0].replace('(','')
+        end_point_lat = point_all[1][0].split(",")[1].replace(')','')
+        html_1 = html.replace(start_point_lng,str(self.ip_location()[0]))
+        html_2 = html_1.replace(start_point_lat,str(self.ip_location()[1]))
+        html_3 = html_2.replace(end_point_lng,str(self.target_ip_localtion()[0]))
+        html_4 = html_3.replace(end_point_lat,str(self.target_ip_localtion()[1]))
+        return html_4
+
+    
+    def initUi(self):
+        self.setWindowFlags(Qt.WindowCloseButtonHint)
+        self.view = QWebEngineView(self.widget)
+        vv = QVBoxLayout()
+        vv.addWidget(self.view)
+        self.widget.setLayout(vv)
+        # with codecs.open("./ip_location/ip_location.html", "r", "utf-8") as f:
+        #     html = f.read()
+        self.view.setHtml(self.map_html())
+        self.time = QTimer()
+
+    def target_ip_localtion(self):
+        res = requests.get(url="http://api.map.baidu.com/location/ip?ak="+str(self.read_key()[0][0])+"&ip="+self.host_true+"&coor=gcj02",headers=self.headers)
+        ip_lng = res.json()['content']['point']['x']
+        ip_lat = res.json()['content']['point']['y']
+        ip_city = res.json()['content']['address']
+        return[ip_lng,ip_lat,ip_city]
+    
+    def ip_location(self):
+        res_location = requests.get(url="https://myip.ipip.net")
+        ip_address = re.findall("\d*\.\d*\.\d*\.\d*",res_location.text)[0]
+        res_ip = requests.get(url="http://api.map.baidu.com/location/ip?ak="+str(self.read_key()[0][0])+"&ip="+ip_address+"&coor=gcj02")
+        ip_lng = res_ip.json()['content']['point']['x']
+        ip_lat = res_ip.json()['content']['point']['y']
+        # ip_city = res_ip.json()['content']['address']
+        return[ip_lng,ip_lat]
+    
+    def local_ip(self):
+        res = requests.get(url="https://myip.ipip.net")
+        ip_address = re.findall("\d*\.\d*\.\d*\.\d*",res.text)[0]
+        return ip_address
+
+    def read_key(self):
+        with open('./config.ini','r',encoding='utf8') as f:
+            info = f.readlines()
+            baidu_ak = re.findall(r'baidu_ak="(.*?)"',info[8])
+            threatbook_key = re.findall(r'threatbook_key="(.*?)"',info[9])
+            return [baidu_ak,threatbook_key]
+    
+    def text_print(self,text):
+        self.textBrowser.append(text)
+
+    
+    # def __del__(self):
+    #     self.view.deleteLater()
+
+class threatbook(QThread):
+    text_print = pyqtSignal(str)
+    notice_print = pyqtSignal(str)
+    count_print = pyqtSignal(str)
+
+    def __init__(self,a,b,c,d,e,f,g,h,i):
+        super(threatbook,self).__init__()
+        # self.email = a
+        self.host = b.strip().split('=')[-1]
+        self.url = "https://api.threatbook.cn/v3/scene/ip_reputation"
+        self.query = {
+                    "apikey":a,
+                    "resource":self.host
+                    }
+        
+        self.basic_qstr = b
+        self.target_lng = c
+        self.taget_lat = d
+        self.target_city = e
+        self.local_host_lng = f
+        self.local_host_lat = g
+        self.baidu_ak = h
+        self.address = i
+    
+    def run(self):        
+        if os.path.getsize('./temp/threatbook/information') > 0:
+            try:
+                with open('./temp/threatbook/information','r',encoding='utf8') as histtory_search_log:
+                    info = json.load(histtory_search_log)
+            except Exception:
+                pass
+        else:
+            info = {}
+        if self.basic_qstr in list(info.keys()):
+            with open("./temp/threatbook/tag_list",'r' , encoding='utf8') as f:
+                tag_info = json.load(f)
+            histtory_search = info[self.basic_qstr]
+            confidence_list = {
+                    "high": "高",
+                    "medium": "中",
+                    "low": "低"
+                }
+            confidence_level = confidence_list[histtory_search['data'][self.host]['confidence_level']]
+            if histtory_search['data'][self.host]['is_malicious'] == False:
+                is_malicious = '否'
+            else:
+                is_malicious = '是'
+
+            severity_list = {
+                "critical": "严重",
+                "high": "高",
+                "medium": "中",
+                "low": "低",
+                "info": "无",
+            }
+            severity = severity_list[histtory_search['data'][self.host]['severity']]
+            host_judgments = histtory_search['data'][self.host]['judgments']
+            host_classes = histtory_search['data'][self.host]['tags_classes']
+            host_scene = histtory_search['data'][self.host]['scene']
+            host_carrier = histtory_search['data'][self.host]['basic']['carrier']
+            host_update_time = histtory_search['data'][self.host]['update_time']
+            
+            self.text_print.emit("<font color='#55ff00'>" + "[+]目标IP: " + self.host + "<font>")
+            time.sleep(0.1)
+            self.text_print.emit("<font color='#55ff00'>" + "[+]情报可信度: " + confidence_level + "<font>")
+            time.sleep(0.1)
+            self.text_print.emit("<font color='#55ff00'>" + "[+]是否为恶意IP: " + is_malicious + "<font>")
+            time.sleep(0.1)
+            self.text_print.emit("<font color='#55ff00'>" + "[+]IP危害等级: " + severity + "<font>")
+            time.sleep(0.1)
+            if len(host_judgments) == 0:
+                self.text_print.emit("<font color='#55ff00'>" + "[+]微步标签：无" + "<font>")
+                time.sleep(0.1)
+            else:
+                list_tag =[]
+                for i in host_judgments:
+                    info_name = tag_info['judgments'][i]
+                    list_tag.append(info_name)
+                list_tag_real = ",".join(list_tag)
+            self.text_print.emit("<font color='#55ff00'>" + "[+]微步标签：" + list_tag_real + "<font>")
+            time.sleep(0.1)
+            if len(host_classes) > 0:
+                self.text_print.emit("<font color='#55ff00'>" + "[+]标签类别：" + host_classes[0]['tags'] + "<font>")
+                time.sleep(0.1)
+            else:
+                self.text_print.emit("<font color='#ff0000'>" + "[-]标签类别：无" + "<font>")
+                time.sleep(0.1)
+            if host_scene != '':
+                self.text_print.emit("<font color='#55ff00'>" + "[+]应用场景：" +tag_info['scene'][host_scene] + "<font>")
+                time.sleep(0.1)
+            else:
+                self.text_print.emit("<font color='#ff0000'>" + "[-]应用场景：无"  + "<font>")
+                time.sleep(0.1)
+            if host_carrier != '':
+                self.text_print.emit("<font color='#55ff00'>" + "[+]运营商：" + host_carrier + "<font>")
+                time.sleep(0.1)
+            else:
+                self.text_print.emit("<font color='#ff0000'>" + "[-]运营商：无"  + "<font>")
+                time.sleep(0.1)
+            
+            self.text_print.emit("<font color='#55ff00'>" + "[+]归属地："+ self.address  + "<font>")
+            time.sleep(0.1)
+
+            if os.name == 'nt':
+                ping_status = subprocess.call("ping -n 2 %s" % self.host, shell=True, stdout=subprocess.PIPE)
+            else:
+                ping_status = subprocess.call("ping -c 2 %s" % self.host, shell=True, stdout=subprocess.PIPE)
+            if ping_status == 0:
+                self.text_print.emit("<font color='#55ff00'>" + "[+]目标 "+self.host +" 存活" + "<font>")
+            else:
+                self.text_print.emit("<font color='#ff0000'>" + "[-]目标 "+self.host +" 不存活" + "<font>")
+            time.sleep(0.1)
+
+            self.text_print.emit("<font color='#55ff00'>" + "[+]情报更新时间：" + host_update_time + "<font>")
+            time.sleep(0.1)
+            self.text_print.emit("<font color='#55ff00'>" + "[+]情报读取完成!" + "<font>")
+
+
+        else:
+            with open("./temp/threatbook/tag_list",'r' , encoding='utf8') as tag_list_all:
+                tag_info = json.load(tag_list_all)
+
+            r = requests.request("GET", self.url, params=self.query)
+            if r.json()['response_code'] != 0:
+                if r.json()['verbose_msg'] == 'Beyond Daily Limitation':
+                    self.text_print.emit("<font color='#ff0000'>" + "[-]微步API没有使用次数" + "<font>")
+                else:
+                    self.text_print.emit("<font color='#ff0000'>" + "[-]" + r.json()['verbose_msg'] + "<font>")
+            else:
+                confidence_list = {
+                    "high": "高",
+                    "medium": "中",
+                    "low": "低"
+                }
+                confidence_level = confidence_list[r.json()['data'][self.host]['confidence_level']]
+                if r.json()['data'][self.host]['is_malicious'] == False:
+                    is_malicious = '否'
+                else:
+                    is_malicious = '是'
+
+                severity_list = {
+                    "critical": "严重",
+                    "high": "高",
+                    "medium": "中",
+                    "low": "低",
+                    "info": "无",
+                }
+                severity = severity_list[r.json()['data'][self.host]['severity']]
+                host_judgments = r.json()['data'][self.host]['judgments']
+                host_classes = r.json()['data'][self.host]['tags_classes']
+                host_scene = r.json()['data'][self.host]['scene']
+                host_carrier = r.json()['data'][self.host]['basic']['carrier']
+                host_update_time = r.json()['data'][self.host]['update_time']
+
+
+                self.text_print.emit("<font color='#55ff00'>" + "[+]目标IP: " + self.host + "<font>")
+                time.sleep(0.1)
+                self.text_print.emit("<font color='#55ff00'>" + "[+]情报可信度: " + confidence_level + "<font>")
+                time.sleep(0.1)
+                self.text_print.emit("<font color='#55ff00'>" + "[+]是否为恶意IP: " + is_malicious + "<font>")
+                time.sleep(0.1)
+                self.text_print.emit("<font color='#55ff00'>" + "[+]IP危害等级: " + severity + "<font>")
+                time.sleep(0.1)
+                if len(host_judgments) == 0:
+                    self.text_print.emit("<font color='#55ff00'>" + "[+]微步标签：无" + "<font>")
+                    time.sleep(0.1)
+                else:
+                    list_tag =[]
+                    for i in host_judgments:
+                        info_name = tag_info['judgments'][i]
+                        list_tag.append(info_name)
+                    list_tag_real = ",".join(list_tag)
+                self.text_print.emit("<font color='#55ff00'>" + "[+]微步标签：" + list_tag_real + "<font>")
+                time.sleep(0.1)
+                if len(host_classes) > 0:
+                    self.text_print.emit("<font color='#55ff00'>" + "[+]标签类别：" + host_classes[0]['tags'] + "<font>")
+                    time.sleep(0.1)
+                else:
+                    self.text_print.emit("<font color='#ff0000'>" + "[-]标签类别：无" + "<font>")
+                    time.sleep(0.1)
+                if host_scene != '':
+                    self.text_print.emit("<font color='#55ff00'>" + "[+]应用场景：" +tag_info['scene'][host_scene] + "<font>")
+                    time.sleep(0.1)
+                else:
+                    self.text_print.emit("<font color='#ff0000'>" + "[-]应用场景：无"  + "<font>")
+                    time.sleep(0.1)
+                if host_carrier != '':
+                    self.text_print.emit("<font color='#55ff00'>" + "[+]运营商：" + host_carrier + "<font>")
+                    time.sleep(0.1)
+                else:
+                    self.text_print.emit("<font color='#ff0000'>" + "[-]运营商：无"  + "<font>")
+                    time.sleep(0.1)
+                
+                self.text_print.emit("<font color='#55ff00'>" + "[+]归属地："+ self.address  + "<font>")
+                time.sleep(0.1)
+                
+                if os.name == 'nt':
+                    ping_status = subprocess.call("ping -n 2 %s" % self.host, shell=True, stdout=subprocess.PIPE)
+                else:
+                    ping_status = subprocess.call("ping -c 2 %s" % self.host, shell=True, stdout=subprocess.PIPE)
+                if ping_status == 0:
+                    self.text_print.emit("<font color='#55ff00'>" + "[+]目标 "+self.host +" 存活" + "<font>")
+                else:
+                    self.text_print.emit("<font color='#ff0000'>" + "[-]目标 "+self.host +" 不存活" + "<font>")
+                time.sleep(0.1)
+                # host_whois=IPWhois(self.host)
+                # host_whois_output=test.lookup_whois()
+                
+                self.text_print.emit("<font color='#55ff00'>" + "[+]情报更新时间：" + host_update_time + "<font>")
+                try:
+                    with open('./temp/threatbook/information','w',encoding='utf8') as new_search:
+                        info[self.basic_qstr] = r.json()
+                        threatbook_log = json.dumps(info,indent=3) 
+                        new_search.write(threatbook_log)
+
+                    self.text_print.emit("<font color='#55ff00'>" + "[+]情报存储完成！" + "<font>")
+                except Exception:
+                    self.text_print.emit("<font color='#55ff00'>" + "[+]情报存储完成！" + "<font>")
+                    pass
+
+
+
+            
+
+
+
 
         
 

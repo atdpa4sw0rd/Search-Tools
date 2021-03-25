@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+	<style type="text/css">
+		html,
+    body {
+			width: 100%;
+			height: 100%;
+			margin: 0;
+			padding: 0;
+    }
+    #map_container {
+			width: 100%;
+			height: 100%;
+			margin: 0;
+    }
+	</style>
+	<script type="text/javascript" src="https://api.map.baidu.com/api?type=webgl&v=1.0&ak=A30zzID7Nm83tGTTjgegr7IbzIOSjCYA"></script>
+	<script src="https://mapv.baidu.com/gl/examples/static/common.js"></script>
+	<script src="https://mapv.baidu.com/build/mapv.js"></script>
+	<script src="https://code.bdstatic.com/npm/mapvgl@1.0.0-beta.54/dist/mapvgl.min.js"></script>
+	<script src="https://code.bdstatic.com/npm/mapvgl@1.0.0-beta.54/dist/mapvgl.threelayers.min.js"></script>
+	<title>Search-Tools</title>
+</head>
+<body>
+	<div id="map_container"></div>
+	<script type="text/javascript">
+		var map = initMap({
+			tilt: 60,
+			heading: 0,
+			center: [126.62252,45.1123123],
+			zoom: 6,
+			style: purpleStyle
+			// purpleStyle snowStyle 
+		});
+		// map.setDisplayOptions({
+        //     skyColors: ['rgba(186, 0, 255, 0)','rgba(186, 0, 255, 0.2)']
+		// })
+		// map.setDisplayOptions({
+        //     poi: true       //是否显示POI信息 
+        // })
+		
+
+		setData(initData());
+		function initData() {
+			var data = [];
+			// var citys = [
+			// 	'北京','沈阳'
+			// ];
+	    var randomCount = 100; // 模拟的飞线的数量
+   		var curve = new mapvgl.BezierCurve();
+	    // 构造数据
+  	  while (randomCount--) {
+        // var startPoint = mapv.utilCityCenter.getCenterByCityName(citys[parseInt(Math.random() * citys.length, 10)]);
+        // var endPoint = mapv.utilCityCenter.getCenterByCityName(citys[parseInt(Math.random() * citys.length, 10)])
+		var startPoint = new BMapGL.Point(116.40387397,39.91488908);
+		var endPoint = new BMapGL.Point(126.62252,45.1123123);
+        curve.setOptions({
+					start: [startPoint.lng, startPoint.lat],
+					end: [endPoint.lng, endPoint.lat]
+        });
+        var curveModelData = curve.getPoints();
+        data.push({
+					geometry: {
+						type: 'LineString',
+						coordinates: curveModelData
+					},
+					properties: {
+						count: Math.random()
+					}
+        });
+    	}
+			return data;
+		}
+		function setData(data) {
+			var view = new mapvgl.View({
+        map: map
+    	});
+
+			var flylineLayer = new mapvgl.FlyLineLayer({
+			style: 'chaos',
+			step: 0.3,
+			color: 'rgba(33, 242, 214, 0.3)',
+			textureColor: function (data) {
+				return data.properties.count > 0.5 ? '#ff0000' : '#56ccdd';
+        },
+        textureWidth: 20,
+        textureLength: 10
+    	});
+    	view.addLayer(flylineLayer);
+    	flylineLayer.setData(data);
+		}
+	</script>	
+</body>
+</html>

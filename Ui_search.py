@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'd:\python\search_tools\search_tools_test\search.ui'
+# Form implementation generated from reading ui file 'f:\HackTools\python\searchtools_test\search.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.1
 #
@@ -60,6 +60,29 @@ class Ui_allsearch(object):
         self.start_keywords_lineEdit.setText("")
         self.start_keywords_lineEdit.setObjectName("start_keywords_lineEdit")
         self.horizontalLayout.addWidget(self.start_keywords_lineEdit)
+        self.loca_pushButton = QtWidgets.QPushButton(self.centralwidget)
+        self.loca_pushButton.setMinimumSize(QtCore.QSize(76, 24))
+        self.loca_pushButton.setStyleSheet("\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:rgb(208, 208, 208);\n"
+"}\n"
+" \n"
+"QPushButton:pressed\n"
+"{\n"
+"    /*背景颜色*/  \n"
+"    background-color:rgb(147, 147, 147);\n"
+"    /*左内边距为3像素，让按下时字向右移动3像素*/  \n"
+"    padding-left:3px;\n"
+"    /*上内边距为3像素，让按下时字向下移动3像素*/  \n"
+"    padding-top:3px;\n"
+"}")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/img/location.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.loca_pushButton.setIcon(icon1)
+        self.loca_pushButton.setIconSize(QtCore.QSize(43, 20))
+        self.loca_pushButton.setObjectName("loca_pushButton")
+        self.horizontalLayout.addWidget(self.loca_pushButton)
         self.proxy_checkBox = QtWidgets.QCheckBox(self.centralwidget)
         self.proxy_checkBox.setStyleSheet("QCheckBox::indicator { \n"
 "    width: 50px;\n"
@@ -83,9 +106,25 @@ class Ui_allsearch(object):
         self.start_time_spinBox.setObjectName("start_time_spinBox")
         self.horizontalLayout.addWidget(self.start_time_spinBox)
         self.proxy_test_pushButton = QtWidgets.QPushButton(self.centralwidget)
-        icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(":/img/spider.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.proxy_test_pushButton.setIcon(icon1)
+        self.proxy_test_pushButton.setStyleSheet("\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:rgb(208, 208, 208);\n"
+"}\n"
+" \n"
+"QPushButton:pressed\n"
+"{\n"
+"    /*背景颜色*/  \n"
+"    background-color:rgb(147, 147, 147);\n"
+"    /*左内边距为3像素，让按下时字向右移动3像素*/  \n"
+"    padding-left:3px;\n"
+"    /*上内边距为3像素，让按下时字向下移动3像素*/  \n"
+"    padding-top:3px;\n"
+"}")
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/img/spider.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.proxy_test_pushButton.setIcon(icon2)
+        self.proxy_test_pushButton.setIconSize(QtCore.QSize(43, 21))
         self.proxy_test_pushButton.setObjectName("proxy_test_pushButton")
         self.horizontalLayout.addWidget(self.proxy_test_pushButton)
         self.verticalLayout_8.addLayout(self.horizontalLayout)
@@ -446,9 +485,10 @@ class Ui_allsearch(object):
 
     def retranslateUi(self, allsearch):
         _translate = QtCore.QCoreApplication.translate
-        allsearch.setWindowTitle(_translate("allsearch", "Search Tools V1.5.3"))
+        allsearch.setWindowTitle(_translate("allsearch", "Search Tools V1.5.4"))
         self.start_search_pushButton.setText(_translate("allsearch", "搜索"))
         self.start_keywords_lineEdit.setPlaceholderText(_translate("allsearch", "ip=10.20.30.1|ips=10.20.30.1/24"))
+        self.loca_pushButton.setText(_translate("allsearch", "定位"))
         self.proxy_checkBox.setText(_translate("allsearch", "代理"))
         self.start_time_spinBox.setSuffix(_translate("allsearch", "天"))
         self.proxy_test_pushButton.setText(_translate("allsearch", "爬取代理"))
