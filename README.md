@@ -9,7 +9,20 @@
 
 **Fofa,Zoomeye,Quake,Shodan,Censys,BinaryEdge,threatbook**
 
+<<<<<<< HEAD
 **HW蓝队情报收集**
+=======
+## 1.5.3更新说明
+```
+1.增加搜索引擎开关
+2.增加设置资产拉取数量
+3.修复延迟6秒整理信息（如果没有整理可在查询一次）
+4.添加小图标
+5.增加结果自动保存到result文件夹下excel
+6.修复线程冲突问题
+
+```
+>>>>>>> 02b5cac5870f3db0dc8a91744b2bfbd7fa74f25f
 
 ## 1.5.4更新说明
 ```
@@ -109,8 +122,13 @@ ips=10.20.30.1/24^^protocol=https
 
 ```
 
+<<<<<<< HEAD
 ![image](https://github.com/atdpa4sw0rd/Search-Tools/blob/main/search_tools.jpg)
 ![image](https://github.com/atdpa4sw0rd/Search-Tools/blob/main/search_main.jpg)
+=======
+![image](https://ggithub.com//atdpa4sw0rd/Search-Tools/blob/main/search_tools.jpg)
+![image](https://github.com//atdpa4sw0rd/Search-Tools/blob/main/search_main.jpg)
+>>>>>>> 02b5cac5870f3db0dc8a91744b2bfbd7fa74f25f
 ![image](https://github.com/atdpa4sw0rd/Search-Tools/blob/main/15a65458-5a94-4302-8bc6-66a82310e9f7.gif)
 
 
