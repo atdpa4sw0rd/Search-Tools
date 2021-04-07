@@ -2806,7 +2806,7 @@ class threatbook(QThread):
                 except Exception:
                     pass
                 # self.textBrowser.append("<font color='#55ff00'>" + "[+]目标IP：" + info[self.host]['values'][0]['ip'] + "<font>")
-                self.text_print.emit("<font color='#55ff00'>" + "[+]运营商：" + info[self.basic_qstr]['values'][0]['service'] + "<font>")
+                self.text_print.emit("<font color='#55ff00'>" + "[+]运营商：" + local_ip[self.basic_qstr]['values'][0]['service'] + "<font>")
                 time.sleep(0.1)
                 self.text_print.emit("<font color='#55ff00'>" + "[+]经度：" + str(local_ip[self.basic_qstr]['values'][0]['lng']) + "<font>")
                 time.sleep(0.1)
