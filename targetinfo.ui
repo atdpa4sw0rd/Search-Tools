@@ -11,7 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>微信公众号：学点编程吧--饼形图</string>
+   <string>IP Location</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="checkbox.qrc">
+    <normaloff>:/img/favicon.png</normaloff>:/img/favicon.png</iconset>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <property name="spacing">
@@ -63,6 +67,8 @@ border-radius:15px</string>
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="checkbox.qrc"/>
+ </resources>
  <connections/>
 </ui>

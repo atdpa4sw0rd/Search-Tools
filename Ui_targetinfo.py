@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'f:\HackTools\python\PyQt558\targetinfo.ui'
+# Form implementation generated from reading ui file 'c:\Users\46076\Desktop\Search-Tools修改\Search-Tools\targetinfo.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.1
 #
@@ -9,7 +9,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-import ip_fa
+import check_status
 
 
 class Ui_Form(object):
@@ -17,7 +17,7 @@ class Ui_Form(object):
         Form.setObjectName("Form")
         Form.resize(966, 635)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(":/ip.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":/img/favicon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         Form.setWindowIcon(icon)
         self.horizontalLayout = QtWidgets.QHBoxLayout(Form)
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
@@ -46,3 +46,4 @@ class Ui_Form(object):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "IP Location"))
         self.groupBox.setTitle(_translate("Form", "目标信息"))
+# import checkbox_rc

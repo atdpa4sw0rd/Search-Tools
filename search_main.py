@@ -6,6 +6,7 @@ from Ui_search import Ui_allsearch
 from Ui_targetinfo import Ui_Form
 from ipwhois import IPWhois
 from bs4 import BeautifulSoup
+from http import cookiejar
 import items
 import favicon
 from PyQt5.QtGui import QIcon,QRegExpValidator,QIntValidator,QDesktopServices
@@ -271,6 +272,8 @@ class MyWindow(QtWidgets.QMainWindow, Ui_allsearch):
         else:
             proxy_flag = 'stop'
 
+        self.start_search_pushButton.setEnabled(False)
+
 
         if len(self.start_keywords_lineEdit.text()) == 0:
             self.notice_output_textBrowser.setText("<font color='#ff0000'>" + '>请输入搜索关键字' + "<font>")
@@ -374,6 +377,8 @@ class MyWindow(QtWidgets.QMainWindow, Ui_allsearch):
                 self.rapiddns_qthread.start()
                 self.rapiddns_qthread.quit()
                 self.final_result_search_output_textBrowser.setText('')
+        self.start_search_pushButton.setEnabled(True)
+
 
 
         
@@ -2399,6 +2404,7 @@ class ip_location(QWidget,Ui_Form):
         self.host_true = a.strip().split("=")[-1]
         self.setupUi(self)
         self.start()
+        
         # self.statusBar().showMessage('by: mojie')
         
         
@@ -2437,25 +2443,128 @@ class ip_location(QWidget,Ui_Form):
         self.time = QTimer()
 
     def target_ip_localtion(self):
-        res = requests.get(url="http://api.map.baidu.com/location/ip?ak="+str(self.read_key()[0][0])+"&ip="+self.host_true+"&coor=gcj02",headers=self.headers)
-        ip_lng = res.json()['content']['point']['x']
-        ip_lat = res.json()['content']['point']['y']
-        ip_city = res.json()['content']['address']
-        return[ip_lng,ip_lat,ip_city]
+        # res = requests.get(url="http://api.map.baidu.com/location/ip?ak="+str(self.read_key()[0][0])+"&ip="+self.host_true+"&coor=gcj02",headers=self.headers)
+        # ip_lng = res.json()['content']['point']['x']
+        # ip_lat = res.json()['content']['point']['y']
+        # ip_city = res.json()['content']['address']
+        if os.path.getsize('./ip_location/ip_info.json') > 0:
+            try:
+                with open('./ip_location/ip_info.json','r',encoding='utf8') as ip_location_info:
+                    info = json.load(ip_location_info)
+            except Exception:
+                pass
+        else:
+            info = {}
+        
+        if self.host in list(info.keys()):
+
+            ip_lng = info[self.host]['values'][0]['lng']
+            ip_lat = info[self.host]['values'][0]['lat']
+            ip_city = info[self.host]['values'][0]['address']
+            return[ip_lng,ip_lat,ip_city]
+    
+        
+        else:
+            cookies_num = requests.get(url='https://www.opengps.cn/Data/IP/ipplus.aspx')
+            cookies = requests.utils.dict_from_cookiejar(cookies_num.cookies)['ASP.NET_SessionId']
+            num = re.findall('value="(\d*)"',cookies_num.text)[0]
+            headers_cool={
+                'Host': 'www.opengps.cn',
+                'Cookie': 'ASP.NET_SessionId='+cookies,
+                'Content-Length': '59',
+                'Sec-Ch-Ua': '\"Google Chrome\";v=\"89\", \"Chromium\";v=\"89\", \";Not A Brand\";v=\"99\"',
+                'Accept': '*/*',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Sec-Ch-Ua-Mobile': '?0',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'Origin': 'https://www.opengps.cn',
+                'Sec-Fetch-Site': 'same-origin',
+                'Sec-Fetch-Mode': 'cors',
+                'Sec-Fetch-Dest': 'empty',
+                'Referer': 'https://www.opengps.cn/Data/IP/ipplus.aspx',
+                'Accept-Encoding': 'gzip, deflate',
+                'Accept-Language': 'zh-CN,zh;q=0.9',
+                'Connection': 'close',
+            }
+            # count = random.randint(10,99)
+            url = 'https://www.opengps.cn/Data/IP/ipplusapi.ashx'
+            data_info ='ip='+self.host_true+'&r=0.8106645995324286&coord=bd09ll&vcode='+str(num)
+            res_info = requests.post(url=url,headers=headers_cool,data=data_info)
+            
+            # while res_info.json()['success'] == False:
+            #     data_info ='ip='+self.host_true+'&r=0.8106645995324286&coord=bd09ll&vcode='+str(count)
+            #     res_info = requests.post(url=url,headers=headers,data=data_info)
+            ip_lng = res_info.json()['values'][0]['lng']
+            ip_lat = res_info.json()['values'][0]['lat']
+            ip_city = res_info.json()['values'][0]['address']
+
+            with open('./ip_location/ip_info.json','w',encoding='utf8') as ip_info:
+                info[self.host] = res_info.json()
+                infonew = json.dumps(info,indent=3) 
+                ip_info.write(infonew)
+            return[ip_lng,ip_lat,ip_city]
     
     def ip_location(self):
-        res_location = requests.get(url="https://myip.ipip.net")
-        ip_address = re.findall("\d*\.\d*\.\d*\.\d*",res_location.text)[0]
-        res_ip = requests.get(url="http://api.map.baidu.com/location/ip?ak="+str(self.read_key()[0][0])+"&ip="+ip_address+"&coor=gcj02")
-        ip_lng = res_ip.json()['content']['point']['x']
-        ip_lat = res_ip.json()['content']['point']['y']
-        # ip_city = res_ip.json()['content']['address']
-        return[ip_lng,ip_lat]
+        if os.path.getsize('./ip_location/ip_info.json') > 0:
+            try:
+                with open('./ip_location/ip_info.json','r',encoding='utf8') as ip_location_info:
+                    info = json.load(ip_location_info)
+            except Exception:
+                pass
+        else:
+            info = {}
+
+        res_ip = requests.get(url='https://www.opengps.cn/Data/IP/IPLoc.ashx')
+        hostinfo = 'ip=' + res_ip.json()['ip']
+        if hostinfo in list(info.keys()):
+            ip_lng = info[hostinfo]['values'][0]['lng']
+            ip_lat = info[hostinfo]['values'][0]['lat']
+            return[ip_lng,ip_lat]
+        else:
+            ip_location = res_ip.json()['ip']
+            cookies_num = requests.get(url='https://www.opengps.cn/Data/IP/ipplus.aspx')
+            cookies = requests.utils.dict_from_cookiejar(cookies_num.cookies)['ASP.NET_SessionId']
+            num = re.findall('value="(\d*)"',cookies_num.text)[0]
+            headers_cool={
+                'Host': 'www.opengps.cn',
+                'Cookie': 'ASP.NET_SessionId=' + cookies,
+                'Content-Length': '59',
+                'Sec-Ch-Ua': '\"Google Chrome\";v=\"89\", \"Chromium\";v=\"89\", \";Not A Brand\";v=\"99\"',
+                'Accept': '*/*',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Sec-Ch-Ua-Mobile': '?0',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'Origin': 'https://www.opengps.cn',
+                'Sec-Fetch-Site': 'same-origin',
+                'Sec-Fetch-Mode': 'cors',
+                'Sec-Fetch-Dest': 'empty',
+                'Referer': 'https://www.opengps.cn/Data/IP/ipplus.aspx',
+                'Accept-Encoding': 'gzip, deflate',
+                'Accept-Language': 'zh-CN,zh;q=0.9',
+                'Connection': 'close',
+            }
+            url = 'https://www.opengps.cn/Data/IP/ipplusapi.ashx'
+            data_info ='ip='+ip_location+'&r=0.8106645995324286&coord=bd09ll&vcode='+str(num)
+            res_info = requests.post(url=url,headers=headers_cool,data=data_info)
+
+            with open('./ip_location/ip_info.json','w',encoding='utf8') as ip_info:
+                info[hostinfo] = res_info.json()
+                infonew = json.dumps(info,indent=3) 
+                ip_info.write(infonew)
+            
+
+            ip_lng = res_info.json()['values'][0]['lng']
+            ip_lat = res_info.json()['values'][0]['lat']
+
+
+            return[ip_lng,ip_lat]
     
-    def local_ip(self):
-        res = requests.get(url="https://myip.ipip.net")
-        ip_address = re.findall("\d*\.\d*\.\d*\.\d*",res.text)[0]
-        return ip_address
+    # def local_ip(self):
+    #     res = requests.get(url="https://myip.ipip.net")
+    #     ip_address = re.findall("\d*\.\d*\.\d*\.\d*",res.text)[0]
+    #     return ip_address
 
     def read_key(self):
         with open('./config.ini','r',encoding='utf8') as f:
@@ -2564,12 +2673,12 @@ class threatbook(QThread):
             else:
                 self.text_print.emit("<font color='#ff0000'>" + "[-]应用场景：无"  + "<font>")
                 time.sleep(0.1)
-            if host_carrier != '':
-                self.text_print.emit("<font color='#55ff00'>" + "[+]运营商：" + host_carrier + "<font>")
-                time.sleep(0.1)
-            else:
-                self.text_print.emit("<font color='#ff0000'>" + "[-]运营商：无"  + "<font>")
-                time.sleep(0.1)
+            # if host_carrier != '':
+            #     self.text_print.emit("<font color='#55ff00'>" + "[+]运营商：" + host_carrier + "<font>")
+            #     time.sleep(0.1)
+            # else:
+            #     self.text_print.emit("<font color='#ff0000'>" + "[-]运营商：无"  + "<font>")
+            #     time.sleep(0.1)
             
             self.text_print.emit("<font color='#55ff00'>" + "[+]归属地："+ self.address  + "<font>")
             time.sleep(0.1)
@@ -2584,6 +2693,20 @@ class threatbook(QThread):
                 self.text_print.emit("<font color='#ff0000'>" + "[-]目标 "+self.host +" 不存活" + "<font>")
             time.sleep(0.1)
 
+            try:
+                with open('./ip_location/ip_info.json','r',encoding='utf8') as ip_location_info:
+                    local_ip = json.load(ip_location_info)
+            except Exception:
+                pass
+            # self.textBrowser.append("<font color='#55ff00'>" + "[+]目标IP：" + info[self.host]['values'][0]['ip'] + "<font>")
+            self.text_print.emit("<font color='#55ff00'>" + "[+]运营商：" + str(local_ip[self.basic_qstr]['values'][0]['service']) + "<font>")
+            time.sleep(0.1)
+            self.text_print.emit("<font color='#55ff00'>" + "[+]经度：" + str(local_ip[self.basic_qstr]['values'][0]['lng']) + "<font>")
+            time.sleep(0.1)
+            self.text_print.emit("<font color='#55ff00'>" + "[+]纬度：" + str(local_ip[self.basic_qstr]['values'][0]['lat']) + "<font>")
+            time.sleep(0.1)
+            self.text_print.emit("<font color='#55ff00'>" + "[+]误差：" + str(local_ip[self.basic_qstr]['values'][0]['radius']) + '千米' + "<font>")
+            time.sleep(0.1)
             self.text_print.emit("<font color='#55ff00'>" + "[+]情报更新时间：" + host_update_time + "<font>")
             time.sleep(0.1)
             self.text_print.emit("<font color='#55ff00'>" + "[+]情报读取完成!" + "<font>")
@@ -2657,12 +2780,12 @@ class threatbook(QThread):
                 else:
                     self.text_print.emit("<font color='#ff0000'>" + "[-]应用场景：无"  + "<font>")
                     time.sleep(0.1)
-                if host_carrier != '':
-                    self.text_print.emit("<font color='#55ff00'>" + "[+]运营商：" + host_carrier + "<font>")
-                    time.sleep(0.1)
-                else:
-                    self.text_print.emit("<font color='#ff0000'>" + "[-]运营商：无"  + "<font>")
-                    time.sleep(0.1)
+                # if host_carrier != '':
+                #     self.text_print.emit("<font color='#55ff00'>" + "[+]运营商：" + host_carrier + "<font>")
+                #     time.sleep(0.1)
+                # else:
+                #     self.text_print.emit("<font color='#ff0000'>" + "[-]运营商：无"  + "<font>")
+                #     time.sleep(0.1)
                 
                 self.text_print.emit("<font color='#55ff00'>" + "[+]归属地："+ self.address  + "<font>")
                 time.sleep(0.1)
@@ -2676,9 +2799,21 @@ class threatbook(QThread):
                 else:
                     self.text_print.emit("<font color='#ff0000'>" + "[-]目标 "+self.host +" 不存活" + "<font>")
                 time.sleep(0.1)
-                # host_whois=IPWhois(self.host)
-                # host_whois_output=test.lookup_whois()
                 
+                try:
+                    with open('./ip_location/ip_info.json','r',encoding='utf8') as ip_location_info:
+                        local_ip = json.load(ip_location_info)
+                except Exception:
+                    pass
+                # self.textBrowser.append("<font color='#55ff00'>" + "[+]目标IP：" + info[self.host]['values'][0]['ip'] + "<font>")
+                self.text_print.emit("<font color='#55ff00'>" + "[+]运营商：" + info[self.host]['values'][0]['service'] + "<font>")
+                time.sleep(0.1)
+                self.text_print.emit("<font color='#55ff00'>" + "[+]经度：" + str(local_ip[self.basic_qstr]['values'][0]['lng']) + "<font>")
+                time.sleep(0.1)
+                self.text_print.emit("<font color='#55ff00'>" + "[+]纬度：" + str(local_ip[self.basic_qstr]['values'][0]['lat']) + "<font>")
+                time.sleep(0.1)
+                self.text_print.emit("<font color='#55ff00'>" + "[+]误差：" + str(local_ip[self.basic_qstr]['values'][0]['radius']) + '千米' + "<font>")
+                time.sleep(0.1)
                 self.text_print.emit("<font color='#55ff00'>" + "[+]情报更新时间：" + host_update_time + "<font>")
                 try:
                     with open('./temp/threatbook/information','w',encoding='utf8') as new_search:
