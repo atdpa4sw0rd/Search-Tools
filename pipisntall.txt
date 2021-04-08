@@ -1,9 +1,0 @@
-PyQt5
-bs4
-python-dateutil
-requests
-shodan
-PyQtWebEngine
-ipwhois
-xlwt
-mmh3
