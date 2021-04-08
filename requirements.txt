@@ -1,0 +1,10 @@
+PyQt5
+cookiejar
+bs4
+python-dateutil
+requests
+shodan
+PyQtWebEngine
+ipwhois
+xlwt
+mmh3
