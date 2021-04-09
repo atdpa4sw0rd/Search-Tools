@@ -19,6 +19,17 @@
 ```
 ![image](https://github.com/atdpa4sw0rd/Search-Tools/blob/main/ip_location.gif)
 
+# 需要 python3 环境支持
+
+```
+git clone https://github.com/atdpa4sw0rd/Search-Tools.git
+cd  tig
+pip3 install -r requirements.txt
+python3 tig.py
+```
+
+
+
 
 ## 简单说明
 - **ICO搜索目前只有Fofa,Shodan,Quake支持**
