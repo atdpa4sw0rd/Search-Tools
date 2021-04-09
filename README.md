@@ -25,7 +25,7 @@
 git clone https://github.com/atdpa4sw0rd/Search-Tools.git
 cd Search-Tools
 pip3 install -r requirements.txt
-python3 search-main.py
+python3 search_main.py
 ```
 
 
