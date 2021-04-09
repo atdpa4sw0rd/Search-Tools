@@ -23,9 +23,9 @@
 
 ```
 git clone https://github.com/atdpa4sw0rd/Search-Tools.git
-cd  tig
+cd Search Tools
 pip3 install -r requirements.txt
-python3 tig.py
+python3 search-main.py
 ```
 
 
